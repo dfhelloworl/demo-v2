@@ -1,9 +1,12 @@
 <!doctype html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Yomi AI 涨乐关键状态原型</title>
+  <title>Yomi AI 涨乐关键状态原型 v2.0</title>
+  <meta name="xzl-version" content="2.0" />
+  <script src="./script.js?v=2.0"></script>
   <style>
     @font-face {
       font-family: "ZLCaiFuTi";
@@ -42,7 +45,9 @@
       --phone-bg: linear-gradient(160deg, #19315d 0%, #0c1b38 52%, #081329 100%);
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -63,15 +68,15 @@
 
     .studio {
       display: grid;
-      grid-template-columns: minmax(300px, 360px) 1fr;
-      gap: 34px;
+      grid-template-columns: 1fr;
+      gap: 0;
       min-height: 100vh;
       padding: 34px;
       align-items: center;
     }
 
     .brief {
-      display: flex;
+      display: none;
       flex-direction: column;
       justify-content: center;
       gap: 18px;
@@ -149,6 +154,7 @@
     }
 
     .layout-note {
+      display: none;
       position: absolute;
       width: 190px;
       padding: 12px 14px;
@@ -198,6 +204,366 @@
       box-shadow: 0 24px 80px rgba(19, 32, 58, 0.28);
     }
 
+    .phone[data-state="kyc"] .agent-bar,
+    .phone[data-state="kyc"] .work-area,
+    .phone[data-state="kyc"] .bottom-bar,
+    .phone[data-state="trade"] .agent-bar,
+    .phone[data-state="trade"] .work-area {
+      display: none;
+    }
+
+    .kyc-screen,
+    .trade-page {
+      display: none;
+      position: absolute;
+      inset: 47px 0 118px;
+      overflow: hidden;
+    }
+
+    .kyc-screen {
+      inset: 47px 0 0;
+    }
+
+    .phone[data-state="kyc"] .kyc-screen,
+    .phone[data-state="trade"] .trade-page {
+      display: block;
+      animation: rise 260ms ease both;
+    }
+
+    .kyc-screen {
+      padding: 14px 18px 24px;
+      background:
+        radial-gradient(circle at 72% 16%, rgba(16, 94, 255, 0.22), transparent 28%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(238, 244, 255, 0.98));
+    }
+
+    body.dark .kyc-screen {
+      background:
+        radial-gradient(circle at 70% 14%, rgba(59, 132, 255, 0.28), transparent 30%),
+        linear-gradient(180deg, rgba(12, 27, 56, 0.82), rgba(7, 19, 41, 0.98));
+    }
+
+    .kyc-orbit {
+      position: relative;
+      height: 210px;
+      border-radius: 28px;
+      padding: 18px;
+      color: #fff;
+      background:
+        radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.45), transparent 16%),
+        linear-gradient(135deg, #23305f, #2f66f6 62%, #00ab61);
+      overflow: hidden;
+      box-shadow: 0 20px 44px rgba(45, 58, 103, 0.22);
+    }
+
+    .kyc-orbit::before,
+    .kyc-orbit::after {
+      content: "";
+      position: absolute;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.26);
+      transform: rotate(-18deg);
+    }
+
+    .kyc-orbit::before {
+      width: 260px;
+      height: 88px;
+      right: -62px;
+      bottom: 20px;
+    }
+
+    .kyc-orbit::after {
+      width: 210px;
+      height: 62px;
+      right: -34px;
+      top: 32px;
+    }
+
+    .kyc-orbit h2 {
+      position: relative;
+      z-index: 1;
+      width: 220px;
+      margin: 0;
+      font-size: 27px;
+      line-height: 1.16;
+      font-weight: 700;
+    }
+
+    .kyc-orbit p {
+      position: relative;
+      z-index: 1;
+      width: 236px;
+      margin: 12px 0 0;
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .kyc-avatar {
+      position: absolute;
+      right: 0;
+      bottom: -6px;
+      width: 132px;
+      height: 146px;
+      object-fit: contain;
+      filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.18));
+    }
+
+    .kyc-progress {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 16px 2px 14px;
+    }
+
+    .kyc-progress span {
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(35, 48, 95, 0.12);
+      overflow: hidden;
+    }
+
+    .kyc-progress span.active {
+      background: linear-gradient(90deg, #2f66f6, #68a4ff);
+      box-shadow: 0 8px 16px rgba(47, 102, 246, 0.2);
+    }
+
+    .kyc-card {
+      display: none;
+      border-radius: 24px;
+      padding: 18px;
+      min-height: 482px;
+      background: rgba(255, 255, 255, 0.86);
+      box-shadow: 0 18px 40px rgba(45, 58, 103, 0.13);
+      backdrop-filter: blur(18px);
+    }
+
+    body.dark .kyc-card {
+      background: rgba(23, 37, 70, 0.86);
+    }
+
+    .kyc-screen[data-step="1"] .kyc-card[data-kyc-card="1"],
+    .kyc-screen[data-step="2"] .kyc-card[data-kyc-card="2"],
+    .kyc-screen[data-step="3"] .kyc-card[data-kyc-card="3"] {
+      display: block;
+    }
+
+    .kyc-card h3 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 22px;
+      line-height: 1.25;
+    }
+
+    .kyc-card p {
+      margin: 10px 0 16px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .kyc-chip-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .kyc-chip {
+      min-height: 72px;
+      border-radius: 18px;
+      padding: 12px;
+      border: 1px solid rgba(16, 94, 255, 0.16);
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(239, 245, 255, 0.82));
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    body.dark .kyc-chip {
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .kyc-chip small {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+      font-weight: 400;
+    }
+
+    .kyc-map {
+      display: grid;
+      gap: 9px;
+    }
+
+    .kyc-module {
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      min-height: 62px;
+      border-radius: 18px;
+      padding: 10px 12px;
+      background: rgba(238, 244, 255, 0.86);
+      border: 1px solid rgba(16, 94, 255, 0.12);
+    }
+
+    body.dark .kyc-module {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .kyc-module-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: linear-gradient(135deg, #2f66f6, #68a4ff);
+      font-weight: 700;
+    }
+
+    .kyc-module b {
+      display: block;
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .kyc-module small {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .kyc-agent-pick {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .kyc-agent-tile {
+      min-height: 106px;
+      border-radius: 20px;
+      display: grid;
+      justify-items: center;
+      align-content: center;
+      gap: 5px;
+      background: rgba(238, 244, 255, 0.86);
+      border: 1px solid rgba(16, 94, 255, 0.12);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    body.dark .kyc-agent-tile {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .kyc-agent-tile img {
+      width: 62px;
+      height: 58px;
+      object-fit: contain;
+    }
+
+    .kyc-primary {
+      position: relative;
+      width: 100%;
+      height: 48px;
+      margin-top: 16px;
+      border-radius: 18px;
+      background: linear-gradient(90deg, #1f5fff, #3f7cff);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      box-shadow: 0 14px 28px rgba(31, 95, 255, 0.24);
+    }
+
+    .tap-hand {
+      position: absolute;
+      z-index: 10;
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+      filter: drop-shadow(0 8px 12px rgba(35, 48, 95, 0.18));
+      animation: tapHint 1.1s ease-in-out infinite;
+    }
+
+    .tap-hand::before {
+      content: "☝";
+      font-size: 30px;
+    }
+
+    .kyc-primary .tap-hand {
+      right: 18px;
+      top: 24px;
+    }
+
+    .overlay-collapse .tap-hand {
+      right: -18px;
+      top: 20px;
+    }
+
+    .save-default .tap-hand {
+      right: 14px;
+      top: -25px;
+    }
+
+    .trade-toggle .tap-hand {
+      right: -40px;
+      top: -23px;
+    }
+
+    .custom-guide .tap-hand {
+      right: 20px;
+      top: 20px;
+    }
+
+    @keyframes tapHint {
+
+      0%,
+      100% {
+        transform: translateY(0) scale(1);
+      }
+
+      45% {
+        transform: translateY(5px) scale(0.94);
+      }
+    }
+
+    .kyc-primary::after,
+    .overlay-collapse::after,
+    .save-default::after,
+    .trade-toggle::after,
+    .custom-guide-actions button:last-child::after {
+      content: "";
+      position: absolute;
+      inset: -8px;
+      border: 3px solid rgba(47, 102, 246, 0.7);
+      border-radius: 22px;
+      background: rgba(47, 102, 246, 0.08);
+      box-shadow: 0 0 0 8px rgba(47, 102, 246, 0.08);
+      pointer-events: none;
+      animation: hotPulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes hotPulse {
+
+      0%,
+      100% {
+        opacity: 0.58;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1.025);
+      }
+    }
+
     .status-bar {
       height: 47px;
       display: flex;
@@ -209,7 +575,9 @@
       color: #000;
     }
 
-    body.dark .status-bar { color: #fff; }
+    body.dark .status-bar {
+      color: #fff;
+    }
 
     .ios-icons {
       display: flex;
@@ -233,10 +601,21 @@
       background: currentColor;
     }
 
-    .signal span:nth-child(1) { height: 4px; }
-    .signal span:nth-child(2) { height: 6px; }
-    .signal span:nth-child(3) { height: 9px; }
-    .signal span:nth-child(4) { height: 12px; }
+    .signal span:nth-child(1) {
+      height: 4px;
+    }
+
+    .signal span:nth-child(2) {
+      height: 6px;
+    }
+
+    .signal span:nth-child(3) {
+      height: 9px;
+    }
+
+    .signal span:nth-child(4) {
+      height: 12px;
+    }
 
     .wifi {
       width: 15px;
@@ -279,15 +658,15 @@
     }
 
     .agent-bar {
-      height: 112px;
+      height: 130px;
       padding: 0 10px;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 4px;
+      display: flex;
+      gap: 8px;
       align-items: end;
-      overflow-x: hidden;
-      overflow-y: hidden;
+      overflow-x: auto;
+      overflow-y: visible;
       scrollbar-width: none;
+      scroll-snap-type: x proximity;
     }
 
     .agent-bar::-webkit-scrollbar {
@@ -296,12 +675,14 @@
 
     .agent {
       position: relative;
-      height: 104px;
+      flex: 0 0 82px;
+      height: 124px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
       cursor: pointer;
+      scroll-snap-align: start;
     }
 
     .agent.disabled {
@@ -331,13 +712,85 @@
     }
 
     .avatar-pad {
+      position: relative;
       width: 82px;
       height: 75px;
       display: grid;
       place-items: center;
       border-radius: 24px 24px 14px 14px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.46), rgba(255,255,255,0.08));
-      box-shadow: inset 0 -14px 24px rgba(255,255,255,0.16);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.08));
+      box-shadow: inset 0 -14px 24px rgba(255, 255, 255, 0.16);
+    }
+
+    .agent-status {
+      position: absolute;
+      z-index: 3;
+      right: 7px;
+      top: 3px;
+      height: 18px;
+      padding: 0 6px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.88);
+      color: #6d778b;
+      font-size: 9px;
+      line-height: 18px;
+      box-shadow: 0 6px 14px rgba(45, 58, 103, 0.1);
+    }
+
+    .agent-status::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #9fabc4;
+    }
+
+    .agent[data-agent="account"] .agent-status::before,
+    .agent[data-agent="trader"] .agent-status::before {
+      background: #1f6fff;
+      box-shadow: 0 0 0 4px rgba(31, 111, 255, 0.12);
+    }
+
+    .agent-work-bubble {
+      position: absolute;
+      z-index: 5;
+      left: 50%;
+      bottom: -24px;
+      width: 88px;
+      min-height: 32px;
+      transform: translateX(-50%);
+      border-radius: 14px;
+      padding: 6px 8px;
+      display: none;
+      color: #23305f;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 12px 24px rgba(45, 58, 103, 0.16);
+      font-size: 9.5px;
+      line-height: 1.25;
+      text-align: left;
+    }
+
+    .agent-work-bubble::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -5px;
+      width: 10px;
+      height: 10px;
+      transform: translateX(-50%) rotate(45deg);
+      background: inherit;
+    }
+
+    .phone[data-state="home"] .agent[data-agent="account"] .agent-work-bubble,
+    .phone[data-state="home"] .agent[data-agent="trader"] .agent-work-bubble {
+      display: block;
+    }
+
+    .phone.kyc-complete[data-state="home"]:not(.guide-dismissed) .agent-work-bubble {
+      display: none;
     }
 
     .agent.add .avatar-pad {
@@ -354,7 +807,7 @@
     }
 
     .phone.t0-created .agent.add {
-      display: none;
+      display: flex;
     }
 
     .add-symbol {
@@ -364,7 +817,7 @@
       display: grid;
       place-items: center;
       color: #243463;
-      background: rgba(255,255,255,0.84);
+      background: rgba(255, 255, 255, 0.84);
       box-shadow: 0 10px 18px rgba(45, 58, 103, 0.12);
       font-size: 30px;
       font-weight: 300;
@@ -449,10 +902,10 @@
     }
 
     .agent.active .avatar-pad {
-      background: linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.2));
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.2));
       box-shadow:
         0 0 0 2px rgba(45, 58, 103, 0.16),
-        inset 0 -14px 24px rgba(255,255,255,0.22),
+        inset 0 -14px 24px rgba(255, 255, 255, 0.22),
         0 12px 24px rgba(45, 58, 103, 0.16);
     }
 
@@ -463,38 +916,94 @@
     }
 
     @keyframes yomiWave {
-      0%, 100% { transform: translateY(-2px) scale(1.04) rotate(0deg); }
-      18% { transform: translateY(-4px) scale(1.05) rotate(-4deg); }
-      36% { transform: translateY(-2px) scale(1.04) rotate(3deg); }
-      54% { transform: translateY(-3px) scale(1.05) rotate(-2deg); }
-      72% { transform: translateY(-2px) scale(1.04) rotate(0deg); }
+
+      0%,
+      100% {
+        transform: translateY(-2px) scale(1.04) rotate(0deg);
+      }
+
+      18% {
+        transform: translateY(-4px) scale(1.05) rotate(-4deg);
+      }
+
+      36% {
+        transform: translateY(-2px) scale(1.04) rotate(3deg);
+      }
+
+      54% {
+        transform: translateY(-3px) scale(1.05) rotate(-2deg);
+      }
+
+      72% {
+        transform: translateY(-2px) scale(1.04) rotate(0deg);
+      }
     }
 
     @keyframes helloPop {
-      0%, 100% { opacity: 0; transform: translateY(4px) scale(0.55); }
-      18%, 62% { opacity: 1; transform: translateY(0) scale(1); }
-      76% { opacity: 0; transform: translateY(-4px) scale(0.88); }
+
+      0%,
+      100% {
+        opacity: 0;
+        transform: translateY(4px) scale(0.55);
+      }
+
+      18%,
+      62% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+
+      76% {
+        opacity: 0;
+        transform: translateY(-4px) scale(0.88);
+      }
     }
 
     @keyframes agentTyping {
-      0%, 100% { transform: translateY(-2px) scale(1.04) rotate(0deg); }
-      28% { transform: translateY(0) scale(1.03) rotate(-1.5deg); }
-      56% { transform: translateY(-4px) scale(1.045) rotate(1.5deg); }
-      78% { transform: translateY(-1px) scale(1.035) rotate(0deg); }
+
+      0%,
+      100% {
+        transform: translateY(-2px) scale(1.04) rotate(0deg);
+      }
+
+      28% {
+        transform: translateY(0) scale(1.03) rotate(-1.5deg);
+      }
+
+      56% {
+        transform: translateY(-4px) scale(1.045) rotate(1.5deg);
+      }
+
+      78% {
+        transform: translateY(-1px) scale(1.035) rotate(0deg);
+      }
     }
 
     @keyframes typingBubble {
-      0%, 100% { opacity: 0.35; transform: translateY(2px) scale(0.72); }
-      34% { opacity: 1; transform: translateY(0) scale(1); }
-      68% { opacity: 0.72; transform: translateY(-2px) scale(0.9); }
+
+      0%,
+      100% {
+        opacity: 0.35;
+        transform: translateY(2px) scale(0.72);
+      }
+
+      34% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+
+      68% {
+        opacity: 0.72;
+        transform: translateY(-2px) scale(0.9);
+      }
     }
 
     .work-area {
       position: absolute;
       left: 0;
       right: 0;
-      top: 164px;
-      bottom: 89px;
+      top: 200px;
+      bottom: 118px;
       padding: 0 12px 12px;
       display: flex;
       flex-direction: column;
@@ -503,11 +1012,86 @@
 
     .phone[data-state="switch"] .work-area,
     .phone[data-state="agent"] .work-area {
-      bottom: 138px;
+      top: 182px;
+      bottom: 118px;
     }
 
     .phone[data-nav="agentCustom"] .work-area {
-      bottom: 92px;
+      bottom: 118px;
+    }
+
+    .phone.kyc-complete[data-state="home"]:not(.guide-dismissed) .work-area {
+      top: 270px;
+    }
+
+    .custom-guide {
+      position: absolute;
+      z-index: 6;
+      left: 16px;
+      right: 16px;
+      top: 166px;
+      min-height: 86px;
+      display: none;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      border-radius: 24px;
+      padding: 14px 14px 14px 18px;
+      border: 1px solid rgba(104, 164, 255, 0.45);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(222, 239, 255, 0.88));
+      box-shadow: 0 18px 38px rgba(47, 102, 246, 0.18), 0 0 34px rgba(95, 178, 255, 0.18);
+      backdrop-filter: blur(18px);
+    }
+
+    .phone.kyc-complete[data-state="home"]:not(.guide-dismissed) .custom-guide {
+      display: grid;
+    }
+
+    body.dark .custom-guide {
+      background: linear-gradient(135deg, rgba(28, 42, 76, 0.92), rgba(18, 31, 60, 0.9));
+      border-color: rgba(104, 164, 255, 0.25);
+    }
+
+    .custom-guide h3 {
+      margin: 0;
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    .custom-guide p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .custom-guide-actions {
+      display: grid;
+      gap: 8px;
+      min-width: 84px;
+    }
+
+    .custom-guide-actions button {
+      position: relative;
+      height: 32px;
+      padding: 0 12px;
+      border-radius: 16px;
+      box-shadow: none;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .use-recommend {
+      background: linear-gradient(90deg, #2f66f6, #8d70ff);
+      color: #fff;
+    }
+
+    .go-custom {
+      border: 1px solid rgba(47, 102, 246, 0.4);
+      background: rgba(255, 255, 255, 0.68);
+      color: #1f5fff;
     }
 
     .overlay {
@@ -695,8 +1279,15 @@
     }
 
     @keyframes rise {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .bubble-question {
@@ -822,6 +1413,88 @@
       padding-bottom: 0;
     }
 
+    .agent-progress-feed {
+      position: absolute;
+      z-index: 3;
+      left: 34px;
+      right: 34px;
+      top: 382px;
+      display: none;
+      border-radius: 18px;
+      padding: 12px 14px;
+      border: 1px solid rgba(16, 94, 255, 0.16);
+      background: rgba(255, 255, 255, 0.88);
+      box-shadow: 0 14px 28px rgba(45, 58, 103, 0.14);
+      backdrop-filter: blur(18px);
+    }
+
+    .phone[data-state="home"] .agent-progress-feed {
+      display: none;
+    }
+
+    .progress-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      color: var(--navy);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .progress-title span {
+      height: 18px;
+      padding: 0 7px;
+      border-radius: 9px;
+      background: rgba(16, 94, 255, 0.08);
+      color: #1f5fff;
+      line-height: 18px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .progress-line {
+      display: grid;
+      grid-template-columns: 22px 1fr auto;
+      gap: 8px;
+      align-items: start;
+      padding: 7px 0;
+      border-top: 1px solid rgba(109, 119, 139, 0.11);
+      font-size: 12px;
+      color: var(--ink);
+    }
+
+    .progress-line:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .progress-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: rgba(31, 95, 255, 0.11);
+      color: #1f5fff;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .progress-line small {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.35;
+    }
+
+    .progress-line strong {
+      color: var(--red);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
     .sector-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -877,7 +1550,7 @@
       font-weight: 500;
     }
 
-    .cta + .cta {
+    .cta+.cta {
       margin-top: 10px;
       color: var(--muted);
       font-weight: 400;
@@ -895,20 +1568,20 @@
       border-radius: 8px;
       padding: 10px;
       border: 1px solid rgba(246, 47, 63, 0.2);
-      background: linear-gradient(180deg, rgba(246, 47, 63, 0.08), rgba(255,255,255,0.62));
+      background: linear-gradient(180deg, rgba(246, 47, 63, 0.08), rgba(255, 255, 255, 0.62));
     }
 
     .rank-column.out {
       border-color: rgba(0, 171, 97, 0.22);
-      background: linear-gradient(180deg, rgba(0, 171, 97, 0.08), rgba(255,255,255,0.58));
+      background: linear-gradient(180deg, rgba(0, 171, 97, 0.08), rgba(255, 255, 255, 0.58));
     }
 
     body.dark .rank-column {
-      background: linear-gradient(180deg, rgba(246, 47, 63, 0.12), rgba(255,255,255,0.05));
+      background: linear-gradient(180deg, rgba(246, 47, 63, 0.12), rgba(255, 255, 255, 0.05));
     }
 
     body.dark .rank-column.out {
-      background: linear-gradient(180deg, rgba(0, 171, 97, 0.12), rgba(255,255,255,0.05));
+      background: linear-gradient(180deg, rgba(0, 171, 97, 0.12), rgba(255, 255, 255, 0.05));
     }
 
     .rank-title {
@@ -1275,11 +1948,11 @@
     }
 
     .agent-input-dock {
-      display: none;
+      display: block;
       width: 354px;
       margin: 0 auto;
-      border-radius: 18px;
-      padding: 11px 12px 10px;
+      border-radius: 22px;
+      padding: 14px 14px 12px;
       border: 1px solid rgba(16, 94, 255, 0.12);
       background: rgba(255, 255, 255, 0.86);
       box-shadow: 0 16px 34px rgba(45, 58, 103, 0.12);
@@ -1293,25 +1966,22 @@
     }
 
     .phone[data-state="switch"] .bottom-bar,
-    .phone[data-state="agent"] .bottom-bar {
-      height: 138px;
-      padding-top: 10px;
+    .phone[data-state="agent"] .bottom-bar,
+    .phone[data-state="trade"] .bottom-bar {
+      height: 118px;
+      padding-top: 8px;
       background: linear-gradient(180deg, rgba(238, 245, 255, 0), rgba(238, 245, 255, 0.92) 22%, rgba(238, 245, 255, 1));
     }
 
     .phone[data-nav="agentCustom"] .bottom-bar {
-      height: 92px;
-      padding-top: 0;
+      height: 118px;
+      padding-top: 8px;
     }
 
     body.dark .phone[data-state="switch"] .bottom-bar,
-    body.dark .phone[data-state="agent"] .bottom-bar {
+    body.dark .phone[data-state="agent"] .bottom-bar,
+    body.dark .phone[data-state="trade"] .bottom-bar {
       background: linear-gradient(180deg, rgba(15, 18, 28, 0), rgba(15, 18, 28, 0.96) 22%, rgba(15, 18, 28, 1));
-    }
-
-    .phone[data-state="switch"] .agent-input-dock,
-    .phone[data-state="agent"] .agent-input-dock {
-      display: block;
     }
 
     .dock-command {
@@ -1337,19 +2007,11 @@
       color: rgba(255, 255, 255, 0.48);
     }
 
-    .phone[data-state="agent"] .dock-command {
-      display: flex;
-    }
-
-    .phone[data-nav="agentCustom"] .dock-command {
-      display: none;
-    }
-
     .trade-input {
       color: var(--muted);
-      font-size: 14px;
-      min-height: 27px;
-      line-height: 24px;
+      font-size: 15px;
+      min-height: 28px;
+      line-height: 25px;
     }
 
     .trade-actions {
@@ -1357,7 +2019,7 @@
       grid-template-columns: 34px 34px 1fr 34px;
       align-items: center;
       gap: 8px;
-      margin-top: 7px;
+      margin-top: 9px;
     }
 
     .trade-icon,
@@ -1391,6 +2053,7 @@
     }
 
     .trade-toggle {
+      position: relative;
       justify-self: start;
       display: inline-flex;
       align-items: center;
@@ -1398,6 +2061,7 @@
       color: var(--ink);
       font-size: 14px;
       font-weight: 600;
+      cursor: pointer;
     }
 
     .toggle-pill {
@@ -1416,6 +2080,20 @@
       border-radius: 50%;
       background: #fff;
       box-shadow: 0 1px 4px rgba(23, 36, 78, 0.2);
+      transition: transform 180ms ease;
+    }
+
+    .phone[data-state="trade"] .trade-toggle {
+      color: #1f5fff;
+    }
+
+    .phone[data-state="trade"] .toggle-pill {
+      background: rgba(31, 95, 255, 0.22);
+    }
+
+    .phone[data-state="trade"] .toggle-pill::before {
+      transform: translateX(16px);
+      background: #1f5fff;
     }
 
     .account-actions {
@@ -1596,7 +2274,7 @@
       color: #b47b21;
       font-size: 12px;
       line-height: 30px;
-      background: rgba(255,255,255,0.6);
+      background: rgba(255, 255, 255, 0.6);
     }
 
     .shock-card {
@@ -1744,7 +2422,7 @@
       background: rgba(255, 255, 255, 0.04);
     }
 
-    .stock-impact + .stock-impact {
+    .stock-impact+.stock-impact {
       margin-top: 8px;
     }
 
@@ -1850,14 +2528,14 @@
       --demo-ink: #1a1d24;
       --demo-sub: #6b7280;
       --demo-faint: #a4abb6;
-      --demo-line: rgba(20,24,29,.07);
+      --demo-line: rgba(20, 24, 29, .07);
       --demo-yomi: #5b6cf0;
       --demo-soft: #eef0ff;
       --demo-up: #e23b3b;
       --demo-down: #0f9d6e;
       --demo-gold: #c79a4e;
       --demo-amber: #e08a1e;
-      --demo-shadow: 0 1px 2px rgba(20,24,29,.04), 0 10px 28px rgba(20,24,29,.06);
+      --demo-shadow: 0 1px 2px rgba(20, 24, 29, .04), 0 10px 28px rgba(20, 24, 29, .06);
       --demo-radius: 22px;
       margin: -2px -16px 0;
       color: var(--demo-ink);
@@ -1865,15 +2543,20 @@
     }
 
     body.dark .account-demo {
-      --demo-ink: rgba(255,255,255,.9);
-      --demo-sub: rgba(255,255,255,.58);
-      --demo-faint: rgba(255,255,255,.4);
-      --demo-line: rgba(255,255,255,.08);
-      --demo-soft: rgba(91,108,240,.18);
+      --demo-ink: rgba(255, 255, 255, .9);
+      --demo-sub: rgba(255, 255, 255, .58);
+      --demo-faint: rgba(255, 255, 255, .4);
+      --demo-line: rgba(255, 255, 255, .08);
+      --demo-soft: rgba(91, 108, 240, .18);
     }
 
-    .account-demo .red { color: var(--demo-up); }
-    .account-demo .grn { color: var(--demo-down); }
+    .account-demo .red {
+      color: var(--demo-up);
+    }
+
+    .account-demo .grn {
+      color: var(--demo-down);
+    }
 
     .account-demo .card {
       margin: 13px 16px 0;
@@ -1885,7 +2568,7 @@
     }
 
     body.dark .account-demo .card {
-      background: rgba(255,255,255,.06);
+      background: rgba(255, 255, 255, .06);
     }
 
     .account-demo .ch {
@@ -1917,8 +2600,8 @@
       overflow: hidden;
       position: relative;
       color: #fff;
-      box-shadow: 0 18px 40px rgba(180,40,40,.25);
-      background: linear-gradient(135deg,#8a1f24 0,#c0392f 55%,#e05a3a 100%);
+      box-shadow: 0 18px 40px rgba(180, 40, 40, .25);
+      background: linear-gradient(135deg, #8a1f24 0, #c0392f 55%, #e05a3a 100%);
     }
 
     .account-demo .shock::after {
@@ -1928,7 +2611,7 @@
       top: -40px;
       width: 150px;
       height: 150px;
-      background: radial-gradient(circle,rgba(255,255,255,.16),transparent 70%);
+      background: radial-gradient(circle, rgba(255, 255, 255, .16), transparent 70%);
     }
 
     .account-demo .shock .sk {
@@ -1975,17 +2658,21 @@
       scrollbar-width: none;
     }
 
-    .account-demo .chain::-webkit-scrollbar { display: none; }
+    .account-demo .chain::-webkit-scrollbar {
+      display: none;
+    }
 
     .account-demo .chain .node {
-      background: rgba(255,255,255,.16);
-      border: 1px solid rgba(255,255,255,.25);
+      background: rgba(255, 255, 255, .16);
+      border: 1px solid rgba(255, 255, 255, .25);
       padding: 5px 9px;
       border-radius: 8px;
       white-space: nowrap;
     }
 
-    .account-demo .chain .arr { opacity: .7; }
+    .account-demo .chain .arr {
+      opacity: .7;
+    }
 
     .account-demo .drop {
       position: relative;
@@ -2014,7 +2701,7 @@
       position: relative;
       z-index: 1;
       margin: 11px 16px 14px;
-      background: rgba(0,0,0,.16);
+      background: rgba(0, 0, 0, .16);
       border-radius: 11px;
       padding: 9px 12px;
       font-size: 11px;
@@ -2041,7 +2728,9 @@
       font-size: 0;
     }
 
-    .account-demo .wbar i { height: 100%; }
+    .account-demo .wbar i {
+      height: 100%;
+    }
 
     .account-demo .wlegend {
       display: flex;
@@ -2063,14 +2752,18 @@
       border-radius: 3px;
     }
 
-    .account-demo .stocks { padding: 4px 0 6px; }
+    .account-demo .stocks {
+      padding: 4px 0 6px;
+    }
 
     .account-demo .stk {
       padding: 12px 16px;
       border-top: 1px solid var(--demo-line);
     }
 
-    .account-demo .stk:first-child { border-top: none; }
+    .account-demo .stk:first-child {
+      border-top: none;
+    }
 
     .account-demo .s1 {
       display: flex;
@@ -2093,7 +2786,10 @@
       flex: 0 0 20px;
     }
 
-    .account-demo .nm { flex: 1; min-width: 0; }
+    .account-demo .nm {
+      flex: 1;
+      min-width: 0;
+    }
 
     .account-demo .nm b {
       font-size: 13.5px;
@@ -2106,7 +2802,9 @@
       margin-left: 5px;
     }
 
-    .account-demo .pr { text-align: right; }
+    .account-demo .pr {
+      text-align: right;
+    }
 
     .account-demo .pr b {
       font-size: 14px;
@@ -2129,7 +2827,7 @@
 
     body.dark .account-demo .path,
     body.dark .account-demo .mtxt {
-      color: rgba(255,255,255,.68);
+      color: rgba(255, 255, 255, .68);
     }
 
     .account-demo .riskflag {
@@ -2141,8 +2839,8 @@
     }
 
     body.dark .account-demo .riskflag {
-      background: rgba(226,59,59,.1);
-      border-color: rgba(226,59,59,.18);
+      background: rgba(226, 59, 59, .1);
+      border-color: rgba(226, 59, 59, .18);
     }
 
     .account-demo .rt {
@@ -2159,7 +2857,7 @@
       height: 9px;
       border-radius: 50%;
       background: var(--demo-up);
-      box-shadow: 0 0 0 3px rgba(226,59,59,.18);
+      box-shadow: 0 0 0 3px rgba(226, 59, 59, .18);
       animation: bl 1.3s infinite;
     }
 
@@ -2178,8 +2876,8 @@
     }
 
     body.dark .account-demo .rcell {
-      background: rgba(255,255,255,.07);
-      border-color: rgba(255,255,255,.08);
+      background: rgba(255, 255, 255, .07);
+      border-color: rgba(255, 255, 255, .08);
     }
 
     .account-demo .rcell small {
@@ -2233,7 +2931,9 @@
       font-weight: 700;
     }
 
-    .account-demo .heat { padding: 4px 14px 14px; }
+    .account-demo .heat {
+      padding: 4px 14px 14px;
+    }
 
     .account-demo .hrow {
       display: flex;
@@ -2268,7 +2968,9 @@
       padding-left: 48px;
     }
 
-    .account-demo .ops { padding: 2px 16px 4px; }
+    .account-demo .ops {
+      padding: 2px 16px 4px;
+    }
 
     .account-demo .opitem {
       display: flex;
@@ -2277,11 +2979,21 @@
       border-bottom: 1px solid var(--demo-line);
     }
 
-    .account-demo .opitem:last-child { border: none; }
+    .account-demo .opitem:last-child {
+      border: none;
+    }
 
-    .account-demo .pri.p1 { background: var(--demo-up); }
-    .account-demo .pri.p2 { background: var(--demo-amber); }
-    .account-demo .pri.p3 { background: var(--demo-sub); }
+    .account-demo .pri.p1 {
+      background: var(--demo-up);
+    }
+
+    .account-demo .pri.p2 {
+      background: var(--demo-amber);
+    }
+
+    .account-demo .pri.p3 {
+      background: var(--demo-sub);
+    }
 
     .account-demo .ot {
       flex: 1;
@@ -2291,7 +3003,7 @@
 
     .account-demo .handoff {
       margin: 13px 16px 0;
-      background: linear-gradient(135deg,#fff,#fbf7ef);
+      background: linear-gradient(135deg, #fff, #fbf7ef);
       border: 1px solid #ecdfc7;
       border-radius: var(--demo-radius);
       padding: 14px;
@@ -2302,8 +3014,8 @@
     }
 
     body.dark .account-demo .handoff {
-      background: rgba(199,154,78,.1);
-      border-color: rgba(236,223,199,.16);
+      background: rgba(199, 154, 78, .1);
+      border-color: rgba(236, 223, 199, .16);
     }
 
     .account-demo .av {
@@ -2311,7 +3023,7 @@
       height: 42px;
       border-radius: 13px;
       flex: 0 0 42px;
-      background: linear-gradient(135deg,#c79a4e,#b8893a);
+      background: linear-gradient(135deg, #c79a4e, #b8893a);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -2320,7 +3032,9 @@
       font-size: 14px;
     }
 
-    .account-demo .ht { flex: 1; }
+    .account-demo .ht {
+      flex: 1;
+    }
 
     .account-demo .ht b {
       font-size: 12.5px;
@@ -2366,7 +3080,7 @@
 
     body.dark .account-demo .qchip,
     body.dark .account-demo .go {
-      background: rgba(255,255,255,.08);
+      background: rgba(255, 255, 255, .08);
     }
 
     .account-demo .closer {
@@ -2381,6 +3095,408 @@
       margin: 0;
     }
 
+    /* ---- 人格化账户管家 ---- */
+    .account-demo .persona {
+      margin: 14px 16px 0;
+      background: #fff;
+      border-radius: var(--demo-radius);
+      box-shadow: var(--demo-shadow);
+      padding: 18px 18px 16px;
+    }
+
+    body.dark .account-demo .persona {
+      background: rgba(255, 255, 255, .06);
+    }
+
+    .account-demo .persona-head {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 13px;
+    }
+
+    .account-demo .persona-head img {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--demo-soft);
+    }
+
+    .account-demo .persona-head b {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .account-demo .persona-head .tag {
+      margin-left: auto;
+      font-size: 10px;
+      color: var(--demo-faint);
+    }
+
+    .account-demo .persona-say {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.62;
+      font-weight: 500;
+      letter-spacing: .1px;
+    }
+
+    .account-demo .persona-say b {
+      font-weight: 800;
+    }
+
+    .account-demo .acts {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+      margin-top: 15px;
+    }
+
+    .account-demo .act {
+      border: 1px solid var(--demo-line);
+      border-radius: 16px;
+      padding: 12px 6px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .15s, transform .15s;
+    }
+
+    .account-demo .act:hover {
+      border-color: rgba(91, 108, 240, .5);
+      transform: translateY(-1px);
+    }
+
+    .account-demo .act .ai {
+      font-size: 16px;
+      line-height: 1;
+      color: var(--demo-yomi);
+    }
+
+    .account-demo .act .al {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-top: 7px;
+    }
+
+    .account-demo .act .as {
+      display: block;
+      font-size: 10px;
+      color: var(--demo-faint);
+      margin-top: 3px;
+    }
+
+    /* 为什么跌 - 事件淡化为一行 */
+    .account-demo .whyline {
+      margin: 13px 16px 0;
+      display: flex;
+      gap: 9px;
+      align-items: flex-start;
+      padding: 12px 14px;
+      background: var(--demo-soft);
+      border-radius: 14px;
+      font-size: 11.5px;
+      line-height: 1.6;
+      color: var(--demo-sub);
+    }
+
+    body.dark .account-demo .whyline {
+      color: rgba(255, 255, 255, .66);
+    }
+
+    .account-demo .whyline .ic {
+      color: var(--demo-yomi);
+      font-weight: 800;
+    }
+
+    .account-demo .whyline b {
+      color: var(--demo-ink);
+      font-weight: 700;
+    }
+
+    /* 持仓诊断小标题副文案 */
+    .account-demo .ch .conc {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--demo-amber);
+    }
+
+    .account-demo .lead-copy {
+      margin: 2px 16px 2px;
+      padding: 4px 0 2px;
+      font-size: 12.5px;
+      line-height: 1.7;
+      color: var(--demo-sub);
+    }
+
+    body.dark .account-demo .lead-copy {
+      color: rgba(255, 255, 255, .66);
+    }
+
+    .account-demo .lead-copy b {
+      color: var(--demo-ink);
+      font-weight: 700;
+    }
+
+    /* 人格化主动建议卡 */
+    .account-demo .offer {
+      margin: 13px 16px 0;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: linear-gradient(135deg, #fff, #eef0ff);
+      border: 1px solid rgba(91, 108, 240, .18);
+      border-radius: 18px;
+      padding: 14px 15px;
+    }
+
+    body.dark .account-demo .offer {
+      background: rgba(91, 108, 240, .12);
+      border-color: rgba(91, 108, 240, .22);
+    }
+
+    .account-demo .offer img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: var(--demo-soft);
+    }
+
+    .account-demo .offer .ot {
+      flex: 1;
+    }
+
+    .account-demo .offer .ot b {
+      font-size: 12.5px;
+      font-weight: 700;
+      display: block;
+    }
+
+    .account-demo .offer .ot small {
+      font-size: 10.5px;
+      color: var(--demo-sub);
+      line-height: 1.5;
+      display: block;
+      margin-top: 3px;
+    }
+
+    .account-demo .offer .go {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--demo-yomi);
+      background: rgba(91, 108, 240, .12);
+      border-radius: 12px;
+      padding: 8px 13px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    /* 持仓分析 · 能量条（清晰可读的高低） */
+    .account-demo .meterset {
+      padding: 8px 16px 14px;
+    }
+
+    .account-demo .mrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .account-demo .mrow:first-child {
+      margin-top: 4px;
+    }
+
+    .account-demo .mlab {
+      width: 70px;
+      flex-shrink: 0;
+      font-size: 12px;
+      color: var(--demo-sub);
+    }
+
+    .account-demo .meter {
+      flex: 1;
+      display: flex;
+      gap: 5px;
+    }
+
+    .account-demo .meter i {
+      flex: 1;
+      height: 15px;
+      border-radius: 4px;
+      background: #eceef3;
+    }
+
+    body.dark .account-demo .meter i {
+      background: rgba(255, 255, 255, .08);
+    }
+
+    .account-demo .mlv {
+      width: 24px;
+      flex-shrink: 0;
+      text-align: center;
+      font-size: 12.5px;
+      font-weight: 800;
+    }
+
+    .account-demo .mlv.hi {
+      color: #d8463c;
+    }
+
+    .account-demo .mlv.mid {
+      color: var(--demo-amber);
+    }
+
+    .account-demo .maxis {
+      display: flex;
+      justify-content: space-between;
+      margin: 11px 30px 0 80px;
+      font-size: 10px;
+      color: var(--demo-faint);
+    }
+
+    .account-demo .gauge svg {
+      display: block;
+      margin: 0 auto;
+    }
+
+    /* 压缩版（健康度 + 持仓分析 并排） */
+    .account-demo .meterset.compact {
+      padding: 6px 12px 12px;
+    }
+
+    .account-demo .meterset.compact .mrow {
+      gap: 7px;
+      margin-top: 9px;
+    }
+
+    .account-demo .meterset.compact .mrow:first-child {
+      margin-top: 2px;
+    }
+
+    .account-demo .meterset.compact .mlab {
+      width: 46px;
+      font-size: 11px;
+    }
+
+    .account-demo .meterset.compact .meter {
+      gap: 4px;
+    }
+
+    .account-demo .meterset.compact .meter i {
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    .account-demo .meterset.compact .mlv {
+      width: 16px;
+      font-size: 11px;
+    }
+
+    .account-demo .meterset.compact .maxis {
+      margin: 9px 22px 0 53px;
+    }
+
+    /* 呼叫 AI 交易员 */
+    .account-demo .tradeplan {
+      margin: 13px 16px 0;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: linear-gradient(135deg, #fff, #eaf1ff);
+      border: 1px solid rgba(16, 94, 255, .16);
+      border-radius: 18px;
+      padding: 14px 15px;
+    }
+
+    body.dark .account-demo .tradeplan {
+      background: rgba(16, 94, 255, .12);
+      border-color: rgba(16, 94, 255, .24);
+    }
+
+    .account-demo .tradeplan img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #eaf1ff;
+    }
+
+    .account-demo .tradeplan .ot {
+      flex: 1;
+    }
+
+    .account-demo .tradeplan .ot b {
+      font-size: 12.5px;
+      font-weight: 700;
+      display: block;
+    }
+
+    .account-demo .tradeplan .ot small {
+      font-size: 10.5px;
+      color: var(--demo-sub);
+      line-height: 1.55;
+      display: block;
+      margin-top: 3px;
+    }
+
+    .account-demo .tradeplan .go {
+      font-size: 12px;
+      font-weight: 700;
+      color: #105eff;
+      background: rgba(16, 94, 255, .12);
+      border-radius: 12px;
+      padding: 8px 13px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    /* 情绪陪伴 tip */
+    .account-demo .tip {
+      margin: 14px 16px 0;
+      padding: 15px 18px 16px;
+      background: linear-gradient(135deg, #fbf7ef, #fefcf7);
+      border: 1px solid #efe6d3;
+      border-radius: 18px;
+    }
+
+    body.dark .account-demo .tip {
+      background: rgba(199, 154, 78, .1);
+      border-color: rgba(236, 223, 199, .16);
+    }
+
+    .account-demo .tip .quote {
+      font-size: 24px;
+      line-height: .6;
+      color: #c79a4e;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    .account-demo .tip p {
+      margin: 8px 0 0;
+      font-size: 13px;
+      line-height: 1.78;
+      color: #7a6a4a;
+    }
+
+    body.dark .account-demo .tip p {
+      color: rgba(236, 223, 199, .82);
+    }
+
+    .account-demo .tip b {
+      color: #8a6d34;
+      font-weight: 800;
+    }
+
+    body.dark .account-demo .tip b {
+      color: #e6c98a;
+    }
+
     .builder-hero,
     .builder-card {
       border-radius: 16px;
@@ -2391,13 +3507,13 @@
     }
 
     .builder-hero {
-      background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(235, 242, 255, 0.78));
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(235, 242, 255, 0.78));
       border-color: rgba(16, 94, 255, 0.16);
     }
 
     body.dark .builder-hero,
     body.dark .builder-card {
-      background: rgba(255,255,255,0.06);
+      background: rgba(255, 255, 255, 0.06);
     }
 
     .builder-hero h3,
@@ -2458,14 +3574,14 @@
       gap: 7px;
       padding: 8px 10px;
       border: 1px solid rgba(16, 94, 255, 0.12);
-      background: rgba(255,255,255,0.7);
+      background: rgba(255, 255, 255, 0.7);
       color: var(--ink);
       font-size: 12px;
       font-weight: 600;
     }
 
     body.dark .skill-pill {
-      background: rgba(255,255,255,0.05);
+      background: rgba(255, 255, 255, 0.05);
     }
 
     .constraint-list {
@@ -2484,18 +3600,18 @@
     }
 
     body.dark .constraint-list div {
-      background: rgba(255,255,255,0.05);
+      background: rgba(255, 255, 255, 0.05);
     }
 
     .agent-created {
       border-radius: 16px;
       padding: 14px;
-      background: linear-gradient(145deg, rgba(232, 246, 239, 0.92), rgba(255,255,255,0.82));
+      background: linear-gradient(145deg, rgba(232, 246, 239, 0.92), rgba(255, 255, 255, 0.82));
       border: 1px solid rgba(0, 171, 97, 0.18);
     }
 
     body.dark .agent-created {
-      background: rgba(0,171,97,0.1);
+      background: rgba(0, 171, 97, 0.1);
     }
 
     .created-title {
@@ -2513,7 +3629,7 @@
       padding: 0 8px;
       border-radius: 11px;
       color: var(--green);
-      background: rgba(0,171,97,0.1);
+      background: rgba(0, 171, 97, 0.1);
       font-size: 11px;
       line-height: 22px;
     }
@@ -2624,6 +3740,553 @@
       background: #2f66f6;
     }
 
+    /* ====== 账户管家 · 对话式入口 ====== */
+    .acct-chat {
+      padding: 4px 2px 2px;
+    }
+
+    /* 思考态 */
+    .acct-think {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 6px 4px 4px;
+      font-size: 13px;
+      color: #8a90a0;
+    }
+
+    .acct-think .dots {
+      display: inline-flex;
+      gap: 4px;
+    }
+
+    .acct-think .dots i {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #b9bfcf;
+      animation: acctblink 1.2s infinite ease-in-out;
+    }
+
+    .acct-think .dots i:nth-child(2) {
+      animation-delay: .2s;
+    }
+
+    .acct-think .dots i:nth-child(3) {
+      animation-delay: .4s;
+    }
+
+    @keyframes acctblink {
+
+      0%,
+      80%,
+      100% {
+        opacity: .3;
+        transform: translateY(0)
+      }
+
+      40% {
+        opacity: 1;
+        transform: translateY(-2px)
+      }
+    }
+
+    /* 问候卡（对标早点听） */
+    .acct-greet {
+      background: linear-gradient(160deg, #eaf0ff 0%, #f3f0fb 60%, #faf6fb 100%);
+      border-radius: 20px;
+      padding: 18px 18px 17px;
+      animation: acctrise .4s ease both;
+    }
+
+    body.dark .acct-greet {
+      background: linear-gradient(160deg, rgba(91, 108, 240, .16), rgba(255, 255, 255, .04));
+    }
+
+    @keyframes acctrise {
+      from {
+        opacity: 0;
+        transform: translateY(8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    .acct-greet .gh {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 13px;
+    }
+
+    .acct-greet .gh img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .acct-greet .gh b {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a1d24;
+    }
+
+    body.dark .acct-greet .gh b {
+      color: #fff;
+    }
+
+    .acct-greet .think-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 13px;
+    }
+
+    .acct-greet .tpill {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #c0457b;
+      background: rgba(216, 93, 148, .13);
+      border-radius: 8px;
+      padding: 4px 9px;
+    }
+
+    .acct-greet .tmeta {
+      font-size: 12px;
+      color: #8a90a0;
+    }
+
+    .acct-greet .tmeta::after {
+      content: " ⌄";
+      color: #b9bfcf;
+    }
+
+    .acct-greet .gsay {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.66;
+      color: #20242e;
+      letter-spacing: .1px;
+    }
+
+    body.dark .acct-greet .gsay {
+      color: rgba(255, 255, 255, .9);
+    }
+
+    .acct-greet .gsay b {
+      font-weight: 800;
+    }
+
+    .acct-greet .gsay .ask {
+      display: block;
+      margin-top: 12px;
+      font-weight: 800;
+    }
+
+    .acct-greet .gchips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 16px;
+    }
+
+    .acct-greet .gchip {
+      font-size: 13px;
+      font-weight: 600;
+      color: #5b6cf0;
+      background: rgba(255, 255, 255, .7);
+      border: 1px solid rgba(91, 108, 240, .28);
+      border-radius: 14px;
+      padding: 9px 14px;
+      cursor: pointer;
+      transition: transform .15s, background .15s;
+    }
+
+    body.dark .acct-greet .gchip {
+      background: rgba(255, 255, 255, .06);
+    }
+
+    .acct-greet .gchip:hover {
+      transform: translateY(-1px);
+      background: #fff;
+    }
+
+    .acct-greet .gchip.primary {
+      color: #fff;
+      background: #5b6cf0;
+      border-color: #5b6cf0;
+    }
+
+    .acct-greet .gchip.primary:hover {
+      background: #4a5be0;
+    }
+
+    /* 用户气泡 */
+    .acct-userbubble {
+      display: flex;
+      justify-content: flex-end;
+      margin: 16px 2px 4px;
+      animation: acctrise .3s ease both;
+    }
+
+    .acct-userbubble span {
+      background: #5b6cf0;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 10px 15px;
+      border-radius: 16px 16px 4px 16px;
+      max-width: 80%;
+    }
+
+    /* 管家应答头（报告前的一句话） */
+    .acct-replyhead {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 14px 2px 10px;
+      animation: acctrise .3s ease both;
+    }
+
+    .acct-replyhead img {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .acct-replyhead b {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #1a1d24;
+    }
+
+    body.dark .acct-replyhead b {
+      color: #fff;
+    }
+
+    .acct-replyhead small {
+      font-size: 11.5px;
+      color: #8a90a0;
+      margin-left: 2px;
+    }
+
+    .acct-report {
+      animation: acctrise .45s ease both;
+    }
+
+    /* ====== AI交易员 · 对话变体 + 卡片 ====== */
+    .acct-chat.trd .acct-greet {
+      background: linear-gradient(160deg, #e8ecff 0%, #eef0fb 55%, #f5f4fc 100%);
+    }
+
+    /* 派单卡 */
+    .dispatch {
+      margin-top: 15px;
+      background: #f1f2fb;
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    body.dark .dispatch {
+      background: rgba(255, 255, 255, .05);
+    }
+
+    .dispatch .dl {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #8a90a0;
+      margin-bottom: 10px;
+    }
+
+    .dispatch .dl::before {
+      content: "";
+      width: 3px;
+      height: 13px;
+      border-radius: 2px;
+      background: #5b6cf0;
+    }
+
+    .dispatch .dbox {
+      background: #fff;
+      border: 1px solid rgba(91, 108, 240, .16);
+      border-radius: 11px;
+      padding: 13px 14px;
+      font-size: 15px;
+      line-height: 1.5;
+      color: #20242e;
+    }
+
+    body.dark .dispatch .dbox {
+      background: rgba(255, 255, 255, .04);
+      color: rgba(255, 255, 255, .9);
+    }
+
+    .dispatch .dbox .caret {
+      display: inline-block;
+      width: 2px;
+      height: 17px;
+      background: #5b6cf0;
+      vertical-align: -3px;
+      margin-left: 1px;
+      animation: trdcaret 1.05s steps(1) infinite;
+    }
+
+    @keyframes trdcaret {
+      50% {
+        opacity: 0;
+      }
+    }
+
+    .dispatch .dchips {
+      display: flex;
+      gap: 9px;
+      margin-top: 11px;
+    }
+
+    .dispatch .dchip {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #5b6cf0;
+      background: rgba(91, 108, 240, .09);
+      border-radius: 11px;
+      padding: 7px 12px;
+    }
+
+    /* 下单策略卡 */
+    .orderplan {
+      margin-top: 4px;
+      background: #fff;
+      border-radius: 18px;
+      padding: 16px 16px 17px;
+      box-shadow: 0 8px 26px rgba(20, 28, 80, .07);
+      animation: acctrise .4s ease both;
+    }
+
+    body.dark .orderplan {
+      background: rgba(255, 255, 255, .05);
+    }
+
+    .orderplan .ophead {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .orderplan .ophead b {
+      font-size: 15px;
+      font-weight: 800;
+      color: #1a1d24;
+    }
+
+    body.dark .orderplan .ophead b {
+      color: #fff;
+    }
+
+    .orderplan .ophead .wait {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 700;
+      color: #5b6cf0;
+      background: rgba(91, 108, 240, .12);
+      border-radius: 9px;
+      padding: 5px 10px;
+    }
+
+    .orderplan .stkrow {
+      font-size: 14px;
+      font-weight: 800;
+      color: #5b6cf0;
+      margin: 14px 0 2px;
+    }
+
+    .orderplan .opline {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 12px;
+      padding: 12px 0;
+      border-top: 1px solid #f0f1f5;
+    }
+
+    body.dark .orderplan .opline {
+      border-color: rgba(255, 255, 255, .08);
+    }
+
+    .orderplan .opk {
+      font-size: 12.5px;
+      color: #9aa0ad;
+      padding-top: 1px;
+    }
+
+    .orderplan .opv b {
+      font-size: 15px;
+      font-weight: 800;
+      color: #20242e;
+      display: block;
+    }
+
+    body.dark .orderplan .opv b {
+      color: #fff;
+    }
+
+    .orderplan .opv small {
+      font-size: 12px;
+      color: #9aa0ad;
+      display: block;
+      margin-top: 4px;
+    }
+
+    .orderplan .rhythm {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+      max-width: 220px;
+    }
+
+    .orderplan .rhythm i {
+      flex: 1;
+      height: 7px;
+      border-radius: 4px;
+      background: #e6e8f0;
+    }
+
+    .orderplan .rhythm i.on {
+      background: #5b6cf0;
+    }
+
+    .orderplan .discipline {
+      margin-top: 15px;
+      background: #fdf0ef;
+      border-radius: 13px;
+      padding: 12px 14px;
+      font-size: 12px;
+      line-height: 1.66;
+      color: #a86158;
+    }
+
+    body.dark .orderplan .discipline {
+      background: rgba(216, 70, 60, .12);
+      color: #e8a59c;
+    }
+
+    .orderplan .discipline b {
+      color: #c0453b;
+      font-weight: 800;
+    }
+
+    body.dark .orderplan .discipline b {
+      color: #f0998f;
+    }
+
+    .orderplan .opbtns {
+      display: grid;
+      grid-template-columns: 1fr 1.35fr;
+      gap: 11px;
+      margin-top: 16px;
+    }
+
+    .orderplan .opbtns button {
+      height: 52px;
+      border-radius: 14px;
+      border: 0;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      line-height: 1.3;
+    }
+
+    .orderplan .opbtns .sim {
+      background: #eef0f6;
+      color: #5a6072;
+    }
+
+    body.dark .orderplan .opbtns .sim {
+      background: rgba(255, 255, 255, .08);
+      color: rgba(255, 255, 255, .8);
+    }
+
+    .orderplan .opbtns .go {
+      background: linear-gradient(135deg, #6f7cf3, #5b6cf0);
+      color: #fff;
+    }
+
+    /* 下达成功 */
+    .trd-success {
+      margin: 12px 2px 2px;
+      background: rgba(17, 163, 123, .1);
+      border: 1px solid rgba(17, 163, 123, .2);
+      border-radius: 14px;
+      padding: 13px 15px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #0c8f68;
+      animation: acctrise .35s ease both;
+    }
+
+    .trd-success b {
+      font-weight: 800;
+    }
+
+    /* 交易任务列表收尾 */
+    .plan-disc {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 10.5px;
+      color: #a4abb6;
+      line-height: 1.6;
+    }
+
+    /* 关联问 chips（交易员靛蓝） */
+    .qchips.trd {
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap;
+      margin: 14px 2px 2px;
+    }
+
+    .qchips.trd .qchip {
+      font-size: 12px;
+      font-weight: 600;
+      color: #5b6cf0;
+      background: #fff;
+      border: 1px solid #e8e9f2;
+      border-radius: 999px;
+      padding: 9px 14px;
+      cursor: pointer;
+      box-shadow: 0 3px 12px rgba(20, 28, 80, .05);
+      transition: transform .15s;
+    }
+
+    .qchips.trd .qchip:hover {
+      transform: translateY(-1px);
+    }
+
+    body.dark .qchips.trd .qchip {
+      background: rgba(255, 255, 255, .06);
+      border-color: rgba(255, 255, 255, .1);
+    }
+
+    .qchips.trd .qchip.primary {
+      color: #fff;
+      background: #2f66f6;
+      border-color: #2f66f6;
+      box-shadow: 0 5px 16px rgba(47, 102, 246, .32);
+    }
+
+    .qchips.trd .qchip.primary:hover {
+      background: #235ae8;
+    }
+
+
+
     .trader-message {
       display: grid;
       grid-template-columns: 48px 1fr;
@@ -2638,20 +4301,20 @@
       border-radius: 50%;
       object-fit: contain;
       border: 2px solid var(--red);
-      background: rgba(255,255,255,0.6);
+      background: rgba(255, 255, 255, 0.6);
     }
 
     .trader-bubble {
       border-radius: 16px 16px 16px 4px;
       padding: 11px 12px;
-      background: rgba(255,255,255,0.74);
+      background: rgba(255, 255, 255, 0.74);
       color: var(--ink);
       font-size: 13px;
       line-height: 1.55;
     }
 
     body.dark .trader-bubble {
-      background: rgba(255,255,255,0.07);
+      background: rgba(255, 255, 255, 0.07);
     }
 
     .portfolio-strip {
@@ -2665,13 +4328,13 @@
       min-height: 70px;
       border-radius: 10px;
       padding: 10px;
-      background: rgba(255,255,255,0.72);
+      background: rgba(255, 255, 255, 0.72);
       color: var(--ink);
       font-size: 12px;
     }
 
     body.dark .stock-tile {
-      background: rgba(255,255,255,0.06);
+      background: rgba(255, 255, 255, 0.06);
     }
 
     .stock-tile strong {
@@ -2798,7 +4461,7 @@
       height: 38px;
       border-radius: 10px;
       border: 1px solid rgba(16, 94, 255, 0.38);
-      background: rgba(255,255,255,0.72);
+      background: rgba(255, 255, 255, 0.72);
       color: var(--blue);
       font-size: 13px;
       font-weight: 600;
@@ -2813,13 +4476,13 @@
     .plan-hero {
       border-radius: 16px;
       padding: 14px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(239, 246, 255, 0.8));
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(239, 246, 255, 0.8));
       border: 1px solid rgba(16, 94, 255, 0.18);
       box-shadow: 0 12px 26px rgba(45, 58, 103, 0.08);
     }
 
     body.dark .plan-hero {
-      background: rgba(255,255,255,0.06);
+      background: rgba(255, 255, 255, 0.06);
     }
 
     .plan-title {
@@ -2921,9 +4584,17 @@
       font-weight: 700;
     }
 
-    .plan-badge.blue { background: #4d8dff; }
-    .plan-badge.purple { background: #8b5cf6; }
-    .plan-badge.orange { background: #ff7043; }
+    .plan-badge.blue {
+      background: #4d8dff;
+    }
+
+    .plan-badge.purple {
+      background: #8b5cf6;
+    }
+
+    .plan-badge.orange {
+      background: #ff7043;
+    }
 
     .plan-item b {
       display: block;
@@ -3065,20 +4736,1812 @@
       animation: spin 1s linear infinite;
     }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .morning-board {
+      --morning-orange: #ff7a1a;
+      --morning-orange-soft: rgba(255, 122, 26, 0.1);
+      display: grid;
+      gap: 12px;
+    }
+
+    .morning-board .morning-hero {
+      order: 0;
+    }
+
+    .morning-board .morning-card.clues {
+      order: 1;
+    }
+
+    .morning-board .morning-card.stocks {
+      order: 2;
+    }
+
+    .morning-board .morning-card.themes {
+      order: 3;
+    }
+
+    .morning-board .morning-card.industries {
+      order: 4;
+    }
+
+    .morning-board .morning-card.global-news {
+      order: 5;
+    }
+
+    .morning-board .morning-card.meeting-view {
+      order: 6;
+    }
+
+    .morning-board .morning-disclaimer {
+      order: 7;
+    }
+
+    .morning-hero {
+      position: relative;
+      overflow: hidden;
+      padding: 16px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 92% 8%, rgba(255, 174, 92, 0.3), transparent 34%),
+        linear-gradient(145deg, #fff8ef, #ffffff 68%);
+      border: 1px solid rgba(255, 122, 26, 0.16);
+      box-shadow: 0 12px 28px rgba(126, 78, 30, 0.08);
+    }
+
+    body.dark .morning-hero {
+      background:
+        radial-gradient(circle at 92% 8%, rgba(255, 122, 26, 0.16), transparent 34%),
+        rgba(255, 255, 255, 0.06);
+    }
+
+    .morning-kicker,
+    .morning-section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .morning-kicker {
+      color: var(--morning-orange);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .morning-kicker span {
+      padding: 4px 7px;
+      border-radius: 999px;
+      background: var(--morning-orange-soft);
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+
+    .morning-hero h3 {
+      margin: 10px 0 7px;
+      color: var(--ink);
+      font-size: 17px;
+      line-height: 1.45;
+    }
+
+    .morning-hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .morning-play {
+      display: grid;
+      grid-template-columns: 38px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      margin-top: 14px;
+      padding: 9px 10px;
+      border-radius: 13px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(255, 122, 26, 0.12);
+    }
+
+    body.dark .morning-play {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .morning-play button {
+      width: 38px;
+      height: 38px;
+      min-height: 38px;
+      padding: 0;
+      border-radius: 50%;
+      background: var(--morning-orange);
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(255, 122, 26, 0.22);
+    }
+
+    .morning-play strong,
+    .morning-play small {
+      display: block;
+    }
+
+    .morning-play strong {
+      font-size: 12px;
+    }
+
+    .morning-play small {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    .morning-wave {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      height: 22px;
+    }
+
+    .morning-wave i {
+      width: 2px;
+      height: 7px;
+      border-radius: 2px;
+      background: rgba(255, 122, 26, 0.42);
+    }
+
+    .morning-wave i:nth-child(2),
+    .morning-wave i:nth-child(6) {
+      height: 14px;
+    }
+
+    .morning-wave i:nth-child(3),
+    .morning-wave i:nth-child(5) {
+      height: 20px;
+    }
+
+    .morning-wave i:nth-child(4) {
+      height: 11px;
+    }
+
+    .morning-play.playing .morning-wave i {
+      animation: morningWave 0.8s ease-in-out infinite alternate;
+    }
+
+    .morning-play.playing .morning-wave i:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    .morning-play.playing .morning-wave i:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+
+    .morning-play.playing .morning-wave i:nth-child(4) {
+      animation-delay: 0.45s;
+    }
+
+    @keyframes morningWave {
+      to {
+        transform: scaleY(0.35);
+        opacity: 0.55;
+      }
+    }
+
+    .overnight-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+    }
+
+    .overnight-item {
+      padding: 10px 9px;
+      border-radius: 12px;
+      background: var(--surface-strong);
+      border: 1px solid var(--line);
+    }
+
+    .overnight-item span,
+    .overnight-item strong,
+    .overnight-item small {
+      display: block;
+    }
+
+    .overnight-item span {
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    .overnight-item strong {
+      margin-top: 5px;
+      font-size: 14px;
+    }
+
+    .overnight-item small {
+      margin-top: 3px;
+      color: var(--green);
+      font-size: 9px;
+    }
+
+    .overnight-item small.down {
+      color: var(--red);
+    }
+
+    .morning-card {
+      padding: 14px;
+      border-radius: 16px;
+      background: var(--surface-strong);
+      border: 1px solid var(--line);
+      box-shadow: 0 8px 20px rgba(45, 58, 103, 0.05);
+    }
+
+    .morning-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.75;
+      text-align: justify;
+    }
+
+    .morning-market-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 7px;
+      margin-top: 12px;
+    }
+
+    .morning-market-item {
+      min-width: 0;
+      padding: 9px 8px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: rgba(16, 94, 255, 0.035);
+    }
+
+    .morning-market-item span,
+    .morning-market-item strong,
+    .morning-market-item small {
+      display: block;
+    }
+
+    .morning-market-item span {
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 9px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .morning-market-item strong {
+      margin-top: 4px;
+      color: var(--red);
+      font-size: 12px;
+    }
+
+    .morning-market-item strong.down {
+      color: var(--green);
+    }
+
+    .morning-market-item small {
+      margin-top: 3px;
+      color: var(--weak);
+      font-size: 8px;
+      line-height: 1.35;
+    }
+
+    .morning-news-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .morning-news-item {
+      display: grid;
+      grid-template-columns: 54px 1fr;
+      gap: 9px;
+      padding-top: 9px;
+      border-top: 1px solid var(--line);
+    }
+
+    .morning-news-item b {
+      color: var(--ink);
+      font-size: 10px;
+      line-height: 1.55;
+    }
+
+    .morning-news-item p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.65;
+      text-align: justify;
+    }
+
+    .morning-opportunity-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      color: var(--ink);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .morning-opportunity-title span {
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 400;
+    }
+
+    .morning-opportunity {
+      display: grid;
+      grid-template-columns: 62px 1fr auto;
+      gap: 8px;
+      align-items: start;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .morning-opportunity:last-of-type {
+      border-bottom: 0;
+    }
+
+    .morning-opportunity>b {
+      color: var(--ink);
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+    .morning-opportunity div strong,
+    .morning-opportunity div small {
+      display: block;
+    }
+
+    .morning-opportunity div strong {
+      color: var(--ink);
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+    .morning-opportunity div small {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 9px;
+      line-height: 1.5;
+    }
+
+    .morning-opportunity>span {
+      padding: 3px 6px;
+      border-radius: 6px;
+      background: rgba(0, 171, 97, 0.08);
+      color: var(--green);
+      font-size: 8px;
+      white-space: nowrap;
+    }
+
+    .morning-opportunity>span.watch {
+      background: rgba(255, 122, 26, 0.1);
+      color: var(--morning-orange);
+    }
+
+    .morning-collapse-bar {
+      display: none;
+    }
+
+    .morning-floating-collapse {
+      position: absolute;
+      z-index: 8;
+      left: 50%;
+      bottom: 74px;
+      transform: translateX(-50%);
+      display: none;
+    }
+
+    .phone[data-nav="morning"].morning-report-open .morning-floating-collapse {
+      display: block;
+    }
+
+    .morning-floating-collapse button {
+      min-height: 28px;
+      padding: 0 18px;
+      border: 1px solid rgba(166, 172, 184, 0.3);
+      border-radius: 16px;
+      background: rgba(246, 250, 255, 0.94);
+      color: var(--muted);
+      box-shadow: 0 8px 20px rgba(45, 58, 103, 0.14);
+      backdrop-filter: blur(14px);
+      font-size: 11px;
+    }
+
+    body.dark .morning-floating-collapse button {
+      background: rgba(31, 38, 54, .94);
+    }
+
+    .morning-collapsed-handle {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 13px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface-strong);
+      color: var(--muted);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .morning-collapsed-handle strong {
+      color: var(--ink);
+      font-size: 11px;
+    }
+
+    .morning-report-shell.collapsed .morning-board {
+      display: none;
+    }
+
+    .morning-report-shell.collapsed .morning-collapsed-handle {
+      display: flex;
+    }
+
+    .morning-section-title {
+      margin-bottom: 10px;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .morning-section-title span {
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 400;
+    }
+
+    .morning-clue {
+      display: grid;
+      grid-template-columns: 25px 1fr auto;
+      gap: 9px;
+      align-items: start;
+      padding: 10px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .morning-clue:first-of-type {
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .morning-rank {
+      width: 25px;
+      height: 25px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--morning-orange-soft);
+      color: var(--morning-orange);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .morning-clue b,
+    .morning-clue small {
+      display: block;
+    }
+
+    .morning-clue b {
+      color: var(--ink);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .morning-clue small {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 9px;
+      line-height: 1.5;
+    }
+
+    .morning-score {
+      padding: 4px 6px;
+      border-radius: 6px;
+      background: rgba(0, 171, 97, 0.08);
+      color: var(--green);
+      font-size: 9px;
+      white-space: nowrap;
+    }
+
+    .morning-clue-story {
+      padding: 13px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .morning-clue-story:first-of-type {
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .morning-clue-story:last-child {
+      padding-bottom: 0;
+    }
+
+    .morning-clue-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .morning-clue-head b {
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .morning-clue-change {
+      color: var(--red);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .morning-clue-tag,
+    .morning-clue-direction {
+      padding: 2px 5px;
+      border: 1px solid rgba(246, 47, 63, 0.28);
+      border-radius: 5px;
+      color: var(--red);
+      font-size: 8px;
+      line-height: 1.2;
+    }
+
+    .morning-clue-summary {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.65;
+    }
+
+    .morning-clue-summary .morning-clue-direction {
+      margin-left: 4px;
+      vertical-align: 1px;
+    }
+
+    .morning-clue-source {
+      margin-left: 5px;
+      color: var(--weak);
+      font-size: 8px;
+      white-space: nowrap;
+    }
+
+    .morning-transmission {
+      margin-top: 9px;
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(16, 94, 255, 0.065);
+      color: var(--ink);
+      font-size: 10px;
+      line-height: 1.65;
+    }
+
+    .morning-transmission span {
+      display: inline-block;
+      margin-right: 6px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: #2f66f6;
+      color: #fff;
+      font-size: 8px;
+      vertical-align: 1px;
+    }
+
+    .morning-clue-advice {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.65;
+    }
+
+    .morning-clue-advice span {
+      margin-right: 5px;
+      color: var(--blue);
+      font-size: 9px;
+    }
+
+    .morning-clue-question {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 9px;
+      padding-top: 9px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 9px;
+      line-height: 1.45;
+    }
+
+    .morning-clue-question strong {
+      flex: none;
+      padding: 4px 7px;
+      border-radius: 999px;
+      background: rgba(246, 47, 63, 0.1);
+      color: var(--red);
+      font-size: 8px;
+    }
+
+    .morning-clue-brief {
+      padding: 13px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .morning-clue-brief:first-of-type {
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .morning-clue-brief:last-child {
+      padding-bottom: 0;
+    }
+
+    .clue-brief-top {
+      display: grid;
+      grid-template-columns: 26px 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .clue-brief-index {
+      width: 26px;
+      height: 26px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--morning-orange-soft);
+      color: var(--morning-orange);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .clue-brief-name {
+      min-width: 0;
+    }
+
+    .clue-brief-name b {
+      color: var(--ink);
+      font-size: 11px;
+    }
+
+    .clue-brief-name strong {
+      margin-left: 5px;
+      color: var(--red);
+      font-size: 11px;
+    }
+
+    .clue-brief-name small {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .clue-brief-relation {
+      padding: 4px 7px;
+      border-radius: 999px;
+      background: rgba(246, 47, 63, 0.08);
+      color: var(--red);
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    .clue-brief-event {
+      margin: 9px 0 0;
+      color: var(--ink);
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.55;
+    }
+
+    .clue-path {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 5px;
+      margin-top: 9px;
+    }
+
+    .clue-path span {
+      position: relative;
+      min-width: 0;
+      padding: 7px 5px;
+      border-radius: 8px;
+      background: rgba(16, 94, 255, 0.055);
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.35;
+      text-align: center;
+    }
+
+    .clue-path span:not(:last-child)::after {
+      content: "›";
+      position: absolute;
+      z-index: 1;
+      right: -5px;
+      top: 50%;
+      color: var(--blue);
+      font-size: 10px;
+      transform: translateY(-50%);
+    }
+
+    .clue-verdict {
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 8px;
+      margin-top: 9px;
+      padding: 9px 10px;
+      border-radius: 10px;
+      background: rgba(16, 94, 255, 0.065);
+    }
+
+    .clue-verdict b {
+      color: var(--blue);
+      font-size: 10px;
+      line-height: 1.55;
+    }
+
+    .clue-verdict p {
+      margin: 0;
+      color: var(--ink);
+      font-size: 10px;
+      line-height: 1.6;
+    }
+
+    .clue-watch {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+    .clue-watch span:first-child::before {
+      content: "今日验证";
+      margin-right: 6px;
+      color: var(--morning-orange);
+      font-weight: 600;
+    }
+
+    .clue-watch button {
+      flex: none;
+      min-height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: var(--morning-orange-soft);
+      color: var(--morning-orange);
+      box-shadow: none;
+      font-size: 10px;
+    }
+
+    .morning-stock {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      padding: 9px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .morning-stock:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .morning-stock b,
+    .morning-stock small,
+    .morning-stock span {
+      display: block;
+    }
+
+    .morning-stock b {
+      font-size: 11px;
+    }
+
+    .morning-stock small {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 9px;
+      line-height: 1.45;
+    }
+
+    .morning-stock span {
+      align-self: center;
+      color: var(--morning-orange);
+      font-size: 9px;
+      font-weight: 600;
+    }
+
+    .morning-detail {
+      display: none;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(16, 94, 255, 0.05);
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.65;
+    }
+
+    .morning-detail.open {
+      display: block;
+      animation: rise 180ms ease both;
+    }
+
+    .morning-more {
+      width: 100%;
+      min-height: 36px;
+      margin-top: 10px;
+      border-radius: 10px;
+      background: var(--morning-orange-soft);
+      color: var(--morning-orange);
+      box-shadow: none;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .morning-disclaimer {
+      color: var(--weak);
+      font-size: 9px;
+      line-height: 1.55;
+      text-align: center;
+    }
+
+    .morning-intro {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 92% 5%, rgba(255, 174, 92, 0.28), transparent 34%),
+        var(--surface-strong);
+      border: 1px solid rgba(255, 122, 26, 0.16);
+      box-shadow: var(--shadow);
+    }
+
+    .morning-intro-head {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .morning-intro-head img {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.52);
+    }
+
+    .morning-intro-head strong,
+    .morning-intro-head small {
+      display: block;
+    }
+
+    .morning-intro-head strong {
+      font-size: 14px;
+    }
+
+    .morning-intro-head small {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .morning-intro-copy {
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .morning-profile {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .morning-profile span {
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: rgba(16, 94, 255, 0.07);
+      color: var(--navy);
+      font-size: 10px;
+    }
+
+    .morning-profile span.holding {
+      background: rgba(246, 47, 63, 0.08);
+      color: #d94a58;
+    }
+
+    .morning-profile span.recent {
+      background: rgba(16, 94, 255, 0.07);
+      color: var(--blue);
+    }
+
+    .morning-profile span.theme {
+      background: rgba(157, 123, 255, 0.09);
+      color: #7656c7;
+    }
+
+    .morning-question {
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      color: var(--navy);
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.6;
+    }
+
+    .morning-supplement {
+      display: grid;
+      gap: 8px;
+    }
+
+    .morning-supplement button {
+      width: 100%;
+      min-height: 42px;
+      padding: 9px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(16, 94, 255, 0.16);
+      background: rgba(255, 255, 255, 0.68);
+      color: var(--navy);
+      box-shadow: none;
+      text-align: left;
+      line-height: 1.5;
+    }
+
+    .morning-options-label {
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .morning-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .morning-options button {
+      width: auto;
+      min-height: 30px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: rgba(16, 94, 255, 0.05);
+      color: var(--blue);
+      font-size: 10px;
+    }
+
+    .morning-options button.selected {
+      border-color: rgba(255, 122, 26, 0.35);
+      background: rgba(255, 122, 26, 0.1);
+      color: #df6812;
+    }
+
+    .morning-compose {
+      display: grid;
+      grid-template-columns: 1fr 38px;
+      gap: 7px;
+      margin-top: 2px;
+    }
+
+    .morning-compose input {
+      min-width: 0;
+      height: 40px;
+      padding: 0 12px;
+      border: 1px solid rgba(45, 58, 103, 0.13);
+      border-radius: 12px;
+      outline: none;
+      background: rgba(255, 255, 255, .72);
+      color: var(--ink);
+      font: 12px/1.4 "PingFang SC", sans-serif;
+    }
+
+    .morning-compose input:focus {
+      border-color: rgba(16, 94, 255, 0.38);
+      box-shadow: 0 0 0 3px rgba(16, 94, 255, 0.06);
+    }
+
+    .morning-compose button {
+      width: 38px;
+      min-height: 38px;
+      padding: 0;
+      border: 0;
+      border-radius: 12px;
+      background: #2f66f6;
+      color: #fff;
+      text-align: center;
+      font-size: 16px;
+      box-shadow: 0 8px 18px rgba(47, 102, 246, .18);
+    }
+
+    body.dark .morning-compose input {
+      border-color: rgba(255, 255, 255, .12);
+      background: rgba(255, 255, 255, .07);
+      color: #fff;
+    }
+
+    .morning-skip {
+      border: 0 !important;
+      background: transparent !important;
+      color: var(--muted) !important;
+      text-align: center !important;
+      box-shadow: none !important;
+    }
+
+    body.dark .morning-supplement button {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .morning-user-message {
+      width: 88%;
+      margin: 4px 0 12px auto;
+      padding: 13px 16px;
+      border-radius: 16px 16px 4px 16px;
+      border: 1px solid rgba(16, 94, 255, 0.18);
+      background: rgba(255, 255, 255, 0.34);
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.6;
+      box-shadow: 0 10px 24px rgba(45, 58, 103, 0.06);
+    }
+
+    .morning-thinking {
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      gap: 9px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .morning-thinking img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      border-radius: 50%;
+    }
+
+    .morning-chat {
+      display: grid;
+      gap: 10px;
+      padding: 8px 0 18px;
+    }
+
+    .morning-chat .assistant-reply {
+      margin-left: 0;
+      margin-top: 0;
+      padding: 0;
+      background: transparent;
+      box-shadow: none;
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    .morning-chat .assistant-reply p {
+      margin: 0 0 12px;
+    }
+
+    .morning-chat .assistant-reply p:last-child {
+      margin-bottom: 0;
+    }
+
+    .morning-dialog-state>.assistant-reply {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      box-shadow: none;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .morning-dialog-state>.assistant-head {
+      margin-top: 18px;
+      margin-bottom: 1px;
+    }
+
+    .morning-dialog-state>.morning-chat-meta {
+      margin: 4px 0 8px;
+    }
+
+    .morning-top-handle {
+      position: sticky;
+      z-index: 6;
+      top: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 34px;
+      margin: 0 0 14px;
+      padding: 0 14px;
+      border: 1px solid rgba(255, 255, 255, .38);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, .66);
+      color: var(--muted);
+      box-shadow: 0 8px 18px rgba(45, 58, 103, .07);
+      backdrop-filter: blur(18px);
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    body.dark .morning-top-handle {
+      border-color: rgba(255, 255, 255, .08);
+      background: rgba(255, 255, 255, .08);
+    }
+
+    .morning-chat .assistant-head {
+      margin-top: 10px;
+      margin-bottom: 1px;
+    }
+
+    .morning-chat .assistant-head img {
+      object-fit: contain;
+      background: transparent;
+    }
+
+    .morning-chat-meta {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 4px 0 8px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .morning-chat-meta span:first-child {
+      padding: 5px 8px;
+      border-radius: 13px;
+      background: rgba(246, 47, 63, .08);
+      color: #b44b66;
+    }
+
+    .morning-suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 4px;
+    }
+
+    .morning-suggestions button {
+      min-height: 30px;
+      padding: 6px 9px;
+      border: 1px solid rgba(16, 94, 255, 0.14);
+      border-radius: 999px;
+      background: rgba(16, 94, 255, .045);
+      color: var(--blue);
+      box-shadow: none;
+      font-size: 12px;
+    }
+
+    .morning-dialog-state.answered .morning-suggestions {
+      display: none;
+    }
+
+    body.dark .morning-suggestions button {
+      background: rgba(255, 255, 255, .06);
+    }
+
+    .morning-result-card {
+      display: grid;
+      grid-template-columns: 38px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      margin: 6px 0 4px;
+      padding: 12px;
+      border: 1px solid rgba(255, 122, 26, 0.18);
+      border-radius: 15px;
+      background: linear-gradient(135deg, rgba(255, 122, 26, .1), rgba(255, 255, 255, .7));
+      box-shadow: 0 10px 24px rgba(45, 58, 103, .08);
+      cursor: pointer;
+    }
+
+    body.dark .morning-result-card {
+      background: linear-gradient(135deg, rgba(255, 122, 26, .12), rgba(255, 255, 255, .05));
+    }
+
+    .morning-result-icon {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #ff9b4f, #e85a00);
+      color: #fff;
+      font-size: 17px;
+    }
+
+    .morning-result-card strong,
+    .morning-result-card small {
+      display: block;
+    }
+
+    .morning-result-card strong {
+      color: var(--ink);
+      font-size: 12px;
+    }
+
+    .morning-result-card small {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 9px;
+      line-height: 1.45;
+    }
+
+    .morning-result-card>span {
+      color: var(--orange, #ff7a1a);
+      font-size: 16px;
+    }
+
+    .phone[data-nav="morning"] .dock-command {
+      display: none;
+    }
+
+    .phone[data-nav="morning"] .agent-card.compact {
+      padding: 0 2px 12px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .phone[data-nav="morning"] .agent-card.compact>h2,
+    .phone[data-nav="morning"] .agent-card.compact>p {
+      display: none;
+    }
+
+    .phone[data-nav="morning"] .execute-view {
+      padding: 0 2px 12px;
+    }
+
+    .phone[data-nav="morning"] .trader-board {
+      margin: 0;
+    }
+
+    .phone[data-nav="morning"] .work-area {
+      bottom: 82px;
+    }
+
+    .phone[data-nav="morning"] .bottom-bar {
+      height: 82px;
+      padding-top: 5px;
+      background: linear-gradient(180deg, rgba(238, 245, 255, 0), rgba(238, 245, 255, .95) 28%, rgba(238, 245, 255, 1));
+    }
+
+    .phone[data-nav="morning"] .agent-input-dock {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr 36px 36px;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px 6px 14px;
+      border-radius: 999px;
+      border-color: rgba(16, 94, 255, .16);
+      background: rgba(255, 255, 255, .94);
+      box-shadow: 0 12px 28px rgba(45, 58, 103, .12);
+    }
+
+    .phone[data-nav="morning"] .agent-input-dock.morning-cta-hint {
+      animation: morningDockBreathe 1.8s ease-in-out infinite;
+    }
+
+    .phone[data-nav="morning"] .agent-input-dock.morning-cta-hint::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border: 2px solid rgba(16, 94, 255, 0.5);
+      border-radius: inherit;
+      pointer-events: none;
+      animation: morningDockRipple 1.8s ease-out infinite;
+    }
+
+    .phone[data-nav="morning"] .agent-input-dock.morning-cta-hint::after {
+      content: "点击继续 ↓";
+      position: absolute;
+      left: 50%;
+      top: -31px;
+      z-index: 2;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #105eff;
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(16, 94, 255, 0.24);
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1;
+      white-space: nowrap;
+      pointer-events: none;
+      transform: translateX(-50%);
+      animation: morningHintBounce 1.2s ease-in-out infinite;
+    }
+
+    .phone[data-nav="morning"] .trade-input {
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: #1d2850;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .phone[data-nav="morning"] .trade-input::before {
+      content: "♩";
+      display: grid;
+      place-items: center;
+      width: 18px;
+      height: 18px;
+      color: #1d2850;
+      font-size: 17px;
+      transform: rotate(180deg);
+    }
+
+    .phone[data-nav="morning"] .trade-input.recording {
+      color: #d94a58;
+      animation: voicePulse 1s ease-in-out infinite;
+    }
+
+    .phone[data-nav="morning"] .trade-actions {
+      display: contents;
+    }
+
+    .phone[data-nav="morning"] .trade-icon {
+      display: none;
+    }
+
+    .phone[data-nav="morning"] .trade-toggle {
+      grid-column: 2;
+      justify-self: center;
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #fff;
+      color: #23305f;
+      box-shadow: 0 5px 14px rgba(45, 58, 103, .12);
+      font-size: 0;
+    }
+
+    .phone[data-nav="morning"] .trade-toggle::before {
+      content: "⌨";
+      font-size: 16px;
+    }
+
+    .phone[data-nav="morning"] .toggle-pill {
+      display: none;
+    }
+
+    .phone[data-nav="morning"] .trade-send {
+      grid-column: 3;
+      width: 36px;
+      height: 36px;
+      background: #fff;
+      color: #23305f;
+      box-shadow: 0 5px 14px rgba(45, 58, 103, .12);
+      font-size: 0;
+    }
+
+    .phone[data-nav="morning"] .trade-send::before {
+      content: "+";
+      font-size: 25px;
+      font-weight: 300;
+    }
+
+    body.dark .phone[data-nav="morning"] .agent-input-dock {
+      background: rgba(24, 24, 27, .94);
+    }
+
+    body.dark .phone[data-nav="morning"] .trade-input,
+    body.dark .phone[data-nav="morning"] .trade-input::before {
+      color: rgba(255, 255, 255, .9);
+    }
+
+    @keyframes voicePulse {
+      50% {
+        transform: scale(.985);
+        opacity: .76;
+      }
+    }
+
+    @keyframes morningDockBreathe {
+
+      0%,
+      100% {
+        box-shadow: 0 12px 28px rgba(45, 58, 103, .12);
+      }
+
+      50% {
+        box-shadow: 0 12px 30px rgba(16, 94, 255, .26);
+      }
+    }
+
+    @keyframes morningDockRipple {
+      0% {
+        opacity: .65;
+        transform: scale(1);
+      }
+
+      70%,
+      100% {
+        opacity: 0;
+        transform: scale(1.045, 1.18);
+      }
+    }
+
+    @keyframes morningHintBounce {
+
+      0%,
+      100% {
+        transform: translate(-50%, 0);
+      }
+
+      50% {
+        transform: translate(-50%, 4px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      .phone[data-nav="morning"] .agent-input-dock.morning-cta-hint,
+      .phone[data-nav="morning"] .agent-input-dock.morning-cta-hint::before,
+      .phone[data-nav="morning"] .agent-input-dock.morning-cta-hint::after {
+        animation: none;
+      }
+    }
+
+
 
     .bottom-bar {
       position: absolute;
+      z-index: 20;
       left: 0;
       right: 0;
       bottom: 0;
-      height: 89px;
-      padding: 0;
-      background: url("./assets/components/bottom-bar.svg") center bottom / 390px 89px no-repeat;
+      height: 118px;
+      padding-top: 8px;
+      background: linear-gradient(180deg, rgba(238, 245, 255, 0), rgba(238, 245, 255, 0.92) 22%, rgba(238, 245, 255, 1));
     }
 
     body.dark .bottom-bar {
-      background: url("./assets/components/bottom-bar-dark.svg") center bottom / 390px 89px no-repeat;
+      background: linear-gradient(180deg, rgba(15, 18, 28, 0), rgba(15, 18, 28, 0.96) 22%, rgba(15, 18, 28, 1));
+    }
+
+    .trade-page {
+      overflow-y: auto;
+      padding-bottom: 22px;
+      background:
+        radial-gradient(circle at 88% 0%, rgba(98, 164, 255, 0.44), transparent 28%),
+        linear-gradient(180deg, #c8e0ff 0%, #f5f8ff 18%, #ffffff 100%);
+      scrollbar-width: none;
+    }
+
+    .trade-page::-webkit-scrollbar {
+      display: none;
+    }
+
+    body.dark .trade-page {
+      background: linear-gradient(180deg, #18315e 0%, #071329 22%, #060b18 100%);
+    }
+
+    .trade-header {
+      height: 118px;
+      padding: 24px 22px 0;
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .trade-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #111;
+      font-size: 25px;
+      font-weight: 800;
+    }
+
+    body.dark .trade-title {
+      color: #fff;
+    }
+
+    .hamburger {
+      width: 32px;
+      height: 22px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .hamburger span {
+      height: 3px;
+      border-radius: 2px;
+      background: currentColor;
+    }
+
+    .simulate {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-left: 46px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .simulate::before {
+      content: "";
+      width: 28px;
+      height: 16px;
+      border-radius: 8px;
+      background: rgba(23, 36, 78, 0.12);
+      box-shadow: inset 2px 2px 0 #fff;
+    }
+
+    .account-id {
+      margin-left: 46px;
+      color: #3f4652;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    body.dark .account-id {
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .trade-pill {
+      height: 42px;
+      min-width: 78px;
+      border-radius: 21px;
+      display: grid;
+      place-items: center;
+      color: #5b6578;
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      background: rgba(255, 255, 255, 0.28);
+      font-size: 17px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.26);
+    }
+
+    .order-card {
+      border-radius: 28px;
+      padding: 22px 18px 18px;
+      background: rgba(248, 251, 255, 0.94);
+      box-shadow: 0 20px 38px rgba(45, 58, 103, 0.08);
+    }
+
+    body.dark .order-card,
+    body.dark .position-card {
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .order-row {
+      display: grid;
+      grid-template-columns: 68px 1fr;
+      gap: 12px;
+      align-items: start;
+      margin-bottom: 15px;
+    }
+
+    .order-label {
+      color: #111;
+      font-size: 18px;
+      font-weight: 650;
+      line-height: 1.4;
+    }
+
+    body.dark .order-label {
+      color: #fff;
+    }
+
+    .order-label small {
+      display: inline-block;
+      margin-top: 5px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: #4f5a6b;
+      border: 1px solid rgba(79, 90, 107, 0.28);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .order-field {
+      min-height: 44px;
+      border-radius: 8px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: #e5eefc;
+      color: #0a0d14;
+      font-size: 19px;
+      font-weight: 700;
+    }
+
+    body.dark .order-field {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .order-field.muted {
+      justify-content: space-between;
+      color: #9aa5b8;
+      font-size: 22px;
+      font-weight: 400;
+    }
+
+    .quote-line {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .amount-row {
+      display: grid;
+      grid-template-columns: 68px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      margin-top: 6px;
+    }
+
+    .amount-value {
+      color: #111;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    body.dark .amount-value {
+      color: #fff;
+    }
+
+    .more-setting {
+      color: #5c6678;
+      border: 1px solid rgba(92, 102, 120, 0.28);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 13px;
+    }
+
+    .order-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .buy-btn,
+    .sell-btn {
+      height: 52px;
+      border-radius: 26px;
+      color: #fff;
+      font-size: 20px;
+      font-weight: 800;
+      box-shadow: none;
+    }
+
+    .buy-btn {
+      background: #f62f3f;
+    }
+
+    .sell-btn {
+      background: #1f6fff;
+    }
+
+    .position-card {
+      margin-top: 18px;
+      border-radius: 24px 24px 0 0;
+      padding: 18px 18px 90px;
+      background: #fff;
+      min-height: 482px;
+    }
+
+    .position-tabs {
+      display: flex;
+      gap: 22px;
+      margin-bottom: 18px;
+      color: #798397;
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .position-tabs span:first-child {
+      color: #111;
+      position: relative;
+    }
+
+    body.dark .position-tabs span:first-child {
+      color: #fff;
+    }
+
+    .position-tabs span:first-child::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -6px;
+      height: 3px;
+      border-radius: 2px;
+      background: #ff6b7a;
+    }
+
+    .position-head,
+    .position-row {
+      display: grid;
+      grid-template-columns: 1.55fr 1fr 0.85fr 0.7fr;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .position-head {
+      color: #8b95a8;
+      font-size: 13px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(109, 119, 139, 0.12);
+    }
+
+    .position-row {
+      min-height: 62px;
+      border-bottom: 1px solid rgba(109, 119, 139, 0.1);
+      color: #111;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    body.dark .position-row {
+      color: #fff;
+    }
+
+    .position-row small {
+      display: block;
+      color: #7b8598;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .pos-tags span {
+      display: inline-block;
+      margin-right: 3px;
+      padding: 0 3px;
+      border-radius: 3px;
+      border: 1px solid rgba(0, 0, 0, 0.18);
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .batch-actions {
+      position: sticky;
+      bottom: 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 22px;
+    }
+
+    .batch-actions button {
+      height: 48px;
+      border-radius: 24px;
+      background: #eef4ff;
+      color: #3d4654;
+      font-size: 16px;
+      font-weight: 700;
+      box-shadow: none;
     }
 
     .num {
@@ -3086,15 +6549,24 @@
       font-weight: 400;
     }
 
-    .up { color: var(--red); }
-    .down { color: var(--green); }
+    .up {
+      color: var(--red);
+    }
+
+    .down {
+      color: var(--green);
+    }
 
     @media (max-width: 900px) {
       .studio {
         grid-template-columns: 1fr;
         padding: 22px;
       }
-      .stage { min-height: auto; }
+
+      .stage {
+        min-height: auto;
+      }
+
       .layout-note {
         position: static;
         width: 390px;
@@ -3104,6 +6576,7 @@
     }
   </style>
 </head>
+
 <body>
   <main class="studio">
     <section class="brief">
@@ -3117,6 +6590,7 @@
         <button data-state-button="custom">工作台定制</button>
         <button data-state-button="account">账户管家Agent</button>
         <button data-state-button="trader">交易员Agent</button>
+        <button data-state-button="morning">早点听Agent</button>
         <button data-state-button="agentCustom">agent定制</button>
         <button data-state-button="addAgent">添加agent</button>
         <button class="mode-toggle" id="modeToggle">切换暗色模式</button>
@@ -3130,7 +6604,7 @@
     </section>
 
     <section class="stage">
-      <div class="phone" id="phone" data-state="home">
+      <div class="phone" id="phone" data-state="kyc">
         <div class="status-bar">
           <span class="num">9:41</span>
           <div class="ios-icons" aria-hidden="true">
@@ -3140,26 +6614,99 @@
           </div>
         </div>
 
+        <section class="kyc-screen" id="kycScreen" data-step="1" aria-label="KYC 个性化引导">
+          <div class="kyc-orbit">
+            <h2>先让我认识你的投资工作台</h2>
+            <p>用 3 个轻量选择生成你的首页 DNA，并预装最适合你的专家 Agent。</p>
+            <img class="kyc-avatar" src="./assets/avatars/yomi.png" alt="Yomi" />
+          </div>
+          <div class="kyc-progress" aria-hidden="true"><span class="active"></span><span></span><span></span></div>
+          <div class="kyc-card" data-kyc-card="1">
+            <h3>你每天最想先看什么？</h3>
+            <p>我会据此决定默认首页的第一屏组件顺序，让行情、持仓和提醒按你的习惯常驻。</p>
+            <div class="kyc-chip-grid">
+              <div class="kyc-chip">持仓异动<small>先看持仓涨跌、资金和风险变化</small></div>
+              <div class="kyc-chip">盯盘信号<small>先看自选股、条件单和今日触发</small></div>
+              <div class="kyc-chip">账户体检<small>先看盈亏归因、集中度和风险热力</small></div>
+              <div class="kyc-chip">交易机会<small>先看可跟随计划和模拟交易表现</small></div>
+            </div>
+            <button class="kyc-primary" data-kyc-next="2">生成首页 DNA <span class="tap-hand"></span></button>
+          </div>
+          <div class="kyc-card" data-kyc-card="2">
+            <h3>我会这样组装你的默认页</h3>
+            <p>这些组件后续都可以继续用自然语言替换字段、调整顺序或固定到首页。</p>
+            <div class="kyc-map">
+              <div class="kyc-module"><span class="kyc-module-icon">1</span>
+                <div><b>今日专属 · 早报</b><small>市场摘要、重点信号、需要立即看的提醒</small></div><span>置顶</span>
+              </div>
+              <div class="kyc-module"><span class="kyc-module-icon">2</span>
+                <div><b>我的盯盘</b><small>盯盘信号同步到自选上方，持续更新</small></div><span>常驻</span>
+              </div>
+              <div class="kyc-module"><span class="kyc-module-icon">3</span>
+                <div><b>Agent 工作进展</b><small>露出专家 Agent 正在发送、同步和执行的动作</small></div><span>新增</span>
+              </div>
+              <div class="kyc-module"><span class="kyc-module-icon">4</span>
+                <div><b>持仓风险雷达</b><small>当账户出现单边暴露时自动提醒</small></div><span>关注</span>
+              </div>
+            </div>
+            <button class="kyc-primary" data-kyc-next="3">继续选择 Agent <span class="tap-hand"></span></button>
+          </div>
+          <div class="kyc-card" data-kyc-card="3">
+            <h3>选择你要带上的专家 Agent</h3>
+            <p>Yomi 负责统一入口和记忆；专家 Agent 在后台运行，重要进展会回到首页露出。</p>
+            <div class="kyc-agent-pick">
+              <div class="kyc-agent-tile"><img src="./assets/avatars/event.png" alt="" />账户管家<small>账户归因</small></div>
+              <div class="kyc-agent-tile"><img src="./assets/avatars/limit.png" alt="" />AI交易员<small>持仓动作</small></div>
+              <div class="kyc-agent-tile">
+                <div class="add-symbol">+</div>添加Agent<small>按需创建</small>
+              </div>
+            </div>
+            <button class="kyc-primary" data-kyc-done="true">进入我的 Yomi 工作台 <span class="tap-hand"></span></button>
+          </div>
+        </section>
+
         <section class="agent-bar" aria-label="Agent 入口">
           <div class="agent yomi active" data-agent="yomi">
             <div class="avatar-pad"><img class="avatar" src="./assets/avatars/yomi.png" alt="Yomi" /></div>
-            <div class="agent-label">Yomi看</div>
+            <div class="agent-label">Yomi看</div><span class="agent-status">工作中</span><span
+              class="agent-work-bubble">正在为你生成默认工作台</span>
+          </div>
+          <div class="agent" data-agent="morning">
+            <div class="avatar-pad"><img class="avatar" src="./assets/avatars/morning.png" alt="早点听" /></div>
+            <div class="agent-label">早点听</div><span class="agent-status">工作中</span>
           </div>
           <div class="agent" data-agent="account">
             <div class="avatar-pad"><img class="avatar" src="./assets/avatars/event.png" alt="账户管家" /></div>
-            <div class="agent-label">账户管家</div>
+            <div class="agent-label">账户管家</div><span class="agent-status">工作中</span><span
+              class="agent-work-bubble">同步账户风险与回撤归因</span>
           </div>
           <div class="agent" data-agent="trader">
             <div class="avatar-pad"><img class="avatar" src="./assets/avatars/limit.png" alt="AI交易员" /></div>
-            <div class="agent-label">AI交易员</div>
-          </div>
-          <div class="agent t0-agent" data-agent="t0">
-            <div class="avatar-pad"><div class="t0-symbol">T0</div></div>
-            <div class="agent-label">T0助手</div>
+            <div class="agent-label">AI交易员</div><span class="agent-status">工作中</span><span
+              class="agent-work-bubble">黄金ETF保护计划待确认</span>
           </div>
           <div class="agent add" data-agent="addAgent">
-            <div class="avatar-pad"><div class="add-symbol">+</div></div>
-            <div class="agent-label">添加Agent</div>
+            <div class="avatar-pad">
+              <div class="add-symbol">+</div>
+            </div>
+            <div class="agent-label">添加Agent</div><span class="agent-status">休息中</span>
+          </div>
+          <div class="agent t0-agent" data-agent="t0">
+            <div class="avatar-pad">
+              <div class="t0-symbol">T0</div>
+            </div>
+            <div class="agent-label">T0助手</div>
+          </div>
+        </section>
+
+        <section class="custom-guide" id="customGuide" aria-label="工作台定制引导">
+          <div>
+            <h3>已结合您的习惯生成专属工作区</h3>
+            <p>可以直接使用推荐布局，也可以用一句话继续调整首页组件和字段。</p>
+          </div>
+          <div class="custom-guide-actions">
+            <button class="use-recommend" id="useRecommend" type="button">使用推荐</button>
+            <button class="go-custom" id="goCustomize" type="button">去定制<span class="tap-hand"></span></button>
           </div>
         </section>
 
@@ -3170,9 +6717,10 @@
               <span>下拉展开</span>
             </div>
             <img class="overlay-image" src="./assets/components/workbench-default.svg" alt="Yomi 默认页常驻组件" />
-            <img class="workbench-svg workbench-signals" src="./assets/components/workbench-signals.svg" alt="定制后的 Yomi 默认页" />
+            <img class="workbench-svg workbench-signals" src="./assets/components/workbench-signals.svg"
+              alt="定制后的 Yomi 默认页" />
           </section>
-          <button class="overlay-collapse" id="overlayCollapse" type="button">收起⌃</button>
+          <button class="overlay-collapse" id="overlayCollapse" type="button">收起⌃<span class="tap-hand"></span></button>
 
           <section class="chat-panel">
             <div class="bubble-question">宁德时代主力资金流入是否持续增强</div>
@@ -3213,7 +6761,7 @@
                   <div class="change-item"><span class="change-icon">1</span><span>展示全部盯盘信号入口。</span></div>
                   <div class="change-item"><span class="change-icon">2</span><span>固定到首页自选上方，方便开屏直接查看。</span></div>
                 </div>
-                <button class="save-default" id="syncSignals">固定到首页</button>
+                <button class="save-default" id="syncSignals">固定到首页<span class="tap-hand"></span></button>
               </div>
             </div>
           </section>
@@ -3225,7 +6773,9 @@
                 <p id="switchLead">我把账户诊断和交易执行拆成两个服务：账户管家负责归因、风险和持仓体检；AI交易员负责动态、持仓和快速交易。</p>
                 <div class="service-grid" id="switchGrid">
                   <div class="service-card">
-                    <div class="service-head"><h3>账户管家</h3><span class="service-state">板块异动诊断</span></div>
+                    <div class="service-head">
+                      <h3>账户管家</h3><span class="service-state">板块异动诊断</span>
+                    </div>
                     <p class="service-copy">半导体新规冲击提前发酵，账户管家沿“事件冲击 → 板块下跌 → 持仓传导”拆解你的账户暴露。</p>
                     <div class="service-metrics">
                       <div class="mini-metric"><span>账户健康度</span><strong>38 · 偏弱</strong></div>
@@ -3233,7 +6783,9 @@
                     </div>
                   </div>
                   <div class="service-card">
-                    <div class="service-head"><h3>AI交易员</h3><span class="service-state">待确认</span></div>
+                    <div class="service-head">
+                      <h3>AI交易员</h3><span class="service-state">待确认</span>
+                    </div>
                     <p class="service-copy">读取账户管家的结论后，生成可执行方案：减仓、调仓、条件单或快速交易，用户确认后才进入交易通道。</p>
                     <div class="service-tags"><span>生成交易方案</span><span>条件单</span><span>快速交易</span></div>
                   </div>
@@ -3252,13 +6804,21 @@
                   <div class="trader-status">
                     <div class="trader-panel">
                       <h3>交易员动态</h3>
-                      <div class="activity-row"><div>半导体回撤触发降风险检查<small>09:41 · 来自账户管家</small></div><strong class="trade-red">高</strong></div>
-                      <div class="activity-row"><div>准备生成一组减仓条件单<small>等待用户确认</small></div><strong>待执行</strong></div>
+                      <div class="activity-row">
+                        <div>半导体回撤触发降风险检查<small>09:41 · 来自账户管家</small></div><strong class="trade-red">高</strong>
+                      </div>
+                      <div class="activity-row">
+                        <div>准备生成一组减仓条件单<small>等待用户确认</small></div><strong>待执行</strong>
+                      </div>
                     </div>
                     <div class="trader-panel">
                       <h3>当前持仓</h3>
-                      <div class="holding-row"><div>汇绿生态<small>301357 · 重仓</small></div><strong class="trade-red">+2.61%</strong></div>
-                      <div class="holding-row"><div>宝明科技<small>002992 · 半导体</small></div><strong class="trade-green">-1.82%</strong></div>
+                      <div class="holding-row">
+                        <div>汇绿生态<small>301357 · 重仓</small></div><strong class="trade-red">+2.61%</strong>
+                      </div>
+                      <div class="holding-row">
+                        <div>宝明科技<small>002992 · 半导体</small></div><strong class="trade-green">-1.82%</strong>
+                      </div>
                     </div>
                   </div>
                   <div class="service-tags"><span>减仓 15%</span><span>调低半导体暴露</span><span>保留观察仓</span></div>
@@ -3281,13 +6841,102 @@
             <span>↵</span>
           </div>
           <div class="agent-input-dock">
-            <div class="trade-input">问 Agent 任何问题...</div>
+            <div class="trade-input" id="agentVoiceInput">问 Agent 任何问题...</div>
             <div class="trade-actions">
               <div class="trade-icon">/</div>
               <div class="trade-icon">⚙</div>
-              <div class="trade-toggle">快速交易 <span class="toggle-pill"></span></div>
+              <div class="trade-toggle" id="quickTrade">快速交易 <span class="toggle-pill"></span><span
+                  class="tap-hand"></span></div>
               <div class="trade-send">↑</div>
             </div>
+          </div>
+        </section>
+        <div class="morning-floating-collapse">
+          <button id="morningFloatingCollapse" type="button">收起⌃</button>
+        </div>
+
+        <section class="trade-page" aria-label="快速交易页面">
+          <div class="trade-header">
+            <div>
+              <div class="trade-title"><span class="hamburger"><span></span><span></span><span></span></span>交易 <span
+                  class="simulate">模拟</span></div>
+              <div class="account-id">普通 21**327⌄</div>
+            </div>
+            <div class="trade-pill">委托</div>
+            <div class="trade-pill">条件单</div>
+          </div>
+          <div class="order-card">
+            <div class="order-row">
+              <div class="order-label">代码<br><small>行情图⌄</small></div>
+              <div>
+                <div class="order-field">贵州茅台 601519 <span style="color:#9aa5b8">×</span></div>
+                <div class="quote-line"><span class="up">1576.00</span><span class="up">+0.50</span><span
+                    class="down">-0.03%</span></div>
+              </div>
+            </div>
+            <div class="order-row">
+              <div class="order-label">类型</div>
+              <div class="order-field">限价委托 <span style="color:#9aa5b8">⌄</span></div>
+            </div>
+            <div class="order-row">
+              <div class="order-label">价格</div>
+              <div>
+                <div class="order-field muted"><span>−</span><b
+                    style="color:var(--ink);font-size:22px;">1554.97</b><span>＋</span></div>
+                <div class="quote-line"><span class="down">1552.21</span><span>买上限/卖下限？</span><span
+                    class="up">1564.00</span></div>
+              </div>
+            </div>
+            <div class="order-row">
+              <div class="order-label">数量<br><small>仓位⌄</small></div>
+              <div>
+                <div class="order-field muted"><span>−</span><b
+                    style="color:var(--ink);font-size:22px;">1000</b><span>＋</span></div>
+                <div class="quote-line" style="grid-template-columns:1fr;"><span>可买8394股 可卖9203股</span></div>
+              </div>
+            </div>
+            <div class="amount-row">
+              <div class="order-label">金额</div>
+              <div class="amount-value">1,554.970元</div>
+              <div class="more-setting">更多设置⌄</div>
+            </div>
+            <div class="order-actions"><button class="buy-btn">买入</button><button class="sell-btn">卖出</button></div>
+          </div>
+          <div class="position-card">
+            <div class="position-tabs"><span>持仓 8</span><span>合约 23</span><span>委托 8</span><span>条件单
+                7</span><span>历史</span></div>
+            <div class="position-head"><span>名称/代码</span><span>持仓盈亏</span><span>持仓/可用</span><span>现价</span></div>
+            <div class="position-row">
+              <div>汇绿生态<small>601495 <span class="pos-tags"><span>信用</span><span>条件单</span></span></small></div>
+              <div class="up">+1551.00<small class="up">+14.92%</small></div>
+              <div>3300<small>3300</small></div>
+              <div>3.62<small>3.15</small></div>
+            </div>
+            <div class="position-row">
+              <div>杉杉股份<small>300298 <span class="pos-tags"><span>信用</span><span>条件单</span></span></small></div>
+              <div class="up">+2013.00<small class="up">+14.92%</small></div>
+              <div>3300<small>3300</small></div>
+              <div>3.62<small>3.15</small></div>
+            </div>
+            <div class="position-row">
+              <div>腾讯控股<small>601049 <span class="pos-tags"><span>信用</span><span>条件单</span></span></small></div>
+              <div class="down">-912.00<small class="down">-4.62%</small></div>
+              <div>3300<small>3300</small></div>
+              <div>3.62<small>3.15</small></div>
+            </div>
+            <div class="position-row">
+              <div>东方财富<small>300295 <span class="pos-tags"><span>信用</span><span>条件单</span></span></small></div>
+              <div class="up">+3824.00<small class="up">+16.83%</small></div>
+              <div>3300<small>3300</small></div>
+              <div>3.62<small>3.15</small></div>
+            </div>
+            <div class="position-row">
+              <div>兰州黄河<small>610899 <span class="pos-tags"><span>信用</span><span>条件单</span></span></small></div>
+              <div class="up">+1551.00<small class="up">+14.92%</small></div>
+              <div>3300<small>3300</small></div>
+              <div>3.62<small>3.15</small></div>
+            </div>
+            <div class="batch-actions"><button>批量买入</button><button>批量卖出</button></div>
           </div>
         </section>
       </div>
@@ -3324,6 +6973,10 @@
     const agentScroll = document.querySelector(".agent-scroll");
     const dockCommand = document.getElementById("dockCommand");
     const syncSignals = document.getElementById("syncSignals");
+    const kycScreen = document.getElementById("kycScreen");
+    const quickTrade = document.getElementById("quickTrade");
+    const useRecommend = document.getElementById("useRecommend");
+    const goCustomize = document.getElementById("goCustomize");
     const noteTopTitle = document.getElementById("noteTopTitle");
     const noteTopText = document.getElementById("noteTopText");
     const noteMiddleTitle = document.getElementById("noteMiddleTitle");
@@ -3332,14 +6985,51 @@
     const noteBottomText = document.getElementById("noteBottomText");
     let currentAgent = "account";
     let agentCustomTimer = null;
+    let accountTimer = null;
     let currentAddAgentStep = 1;
+    let morningLastUserText = "";
+    let trd = { plan: false, confirmed: false, tasks: false };
+
+    function renderTrader() {
+      const ub = (t) => '<div class="acct-userbubble trd"><span>' + t + '</span></div>';
+      const rh = (m) => '<div class="acct-replyhead"><img src="./assets/avatars/limit.png" alt="AI交易员" /><b>AI交易员</b><small>' + m + '</small></div>';
+      let html = traderGreeting;
+      if (trd.plan) html += ub("帮我制定交易计划") + rh("已制定下单策略 · 待你确认") + traderPlan;
+      if (trd.confirmed) html += ub("确认执行 · 下达指令") + '<div class="trd-success">✓ <b>已下达 2 笔条件单</b>，盘中只在你设定的价位触发执行，任一笔成交我都会第一时间通知你。</div>';
+      if (trd.confirmed && !trd.tasks) html += traderChips;
+      if (trd.tasks) html += ub("查询其他交易计划") + rh("为你汇总当前正在执行的交易任务") + traderTasks;
+      executeBoard.innerHTML = html;
+      executeBoard.querySelectorAll("[data-trd-plan]").forEach((e) => e.addEventListener("click", () => { trd.plan = true; renderTrader(); }));
+      executeBoard.querySelectorAll("[data-trd-confirm]").forEach((e) => e.addEventListener("click", () => { trd.confirmed = true; renderTrader(); }));
+      executeBoard.querySelectorAll("[data-trd-tasks]").forEach((e) => e.addEventListener("click", () => { trd.tasks = true; renderTrader(); }));
+    }
+
+    function wireAccountChips() {
+      const label = { "帮我分析账户": "帮我分析下账户", "今天为什么跌": "今天账户为什么跌？", "看看风险大不大": "帮我看看风险大不大" };
+      executeBoard.querySelectorAll("[data-acct-analyze]").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          const said = label[chip.textContent.trim()] || chip.textContent.trim();
+          executeBoard.innerHTML =
+            accountGreeting +
+            '<div class="acct-userbubble"><span>' + said + '</span></div>' +
+            '<div class="acct-replyhead"><img src="./assets/avatars/event.png" alt="账户管家" /><b>账户管家</b><small>已为你体检完毕 · 14:32</small></div>' +
+            '<div class="acct-report">' + accountDemoResult + '</div>';
+          wireAccountChips();
+          const report = executeBoard.querySelector(".acct-report");
+          if (report) report.scrollTop;
+        });
+      });
+    }
 
     const stateAgent = {
+      kyc: "yomi",
       home: "yomi",
       chat: "yomi",
       custom: "yomi",
       agentCustom: "trader",
-      addAgent: "addAgent"
+      morning: "morning",
+      addAgent: "addAgent",
+      trade: "trader"
     };
 
     const noteCopy = {
@@ -3357,6 +7047,11 @@
         ["工作台定制", "通过一轮自然语言对话，把用户要看的盯盘信号固定到默认首页。"],
         ["确认式生成", "Yomi 先整理盯盘信号模块，并询问用户是否固定到首页。"],
         ["保存回首页", "用户确认后回到默认工作台，页面更新为 3.svg 的定制结果。"]
+      ],
+      morning: [
+        ["早点听 Agent", "顶部选中早点听，进入专属盘前资讯服务。它不是新闻列表，而是按重要性整理后的开盘准备。"],
+        ["盘前决策区", "先给今日市场定调，再展示隔夜市场、热门线索及其对自选股的传导逻辑。"],
+        ["收听与追问", "用户可以播放 60 秒摘要、展开完整线索，或从底部继续追问具体股票。"]
       ],
       account: [
         ["账户管家 Agent", "顶部选中账户管家，表示进入专业账户体检服务。"],
@@ -3426,27 +7121,66 @@
       </div>
     `;
 
+    const accountThinking = `
+      <div class="acct-chat">
+        <div class="acct-think"><span>正在读取你的账户和今天的市场情况</span><span class="dots"><i></i><i></i><i></i></span></div>
+      </div>
+    `;
+
+    const accountGreeting = `
+      <div class="acct-chat">
+        <div class="acct-greet">
+          <div class="gh"><img src="./assets/avatars/event.png" alt="账户管家" /><b>账户管家</b></div>
+          <div class="think-row"><span class="tpill">深度思考</span><span class="tmeta">已读取账户和最新市场情况</span></div>
+          <p class="gsay">下午好，我看了下今天的<b>市场不太平</b>，你的<b>账户也波动较大</b>。<span class="ask">需要我帮你分析下账户情况吗？</span></p>
+          <div class="gchips">
+            <div class="gchip primary" data-acct-analyze>帮我分析账户</div>
+            <div class="gchip" data-acct-analyze>今天为什么跌</div>
+            <div class="gchip" data-acct-analyze>看看风险大不大</div>
+          </div>
+        </div>
+      </div>
+    `;
+
     const accountDemoResult = `
       <div class="account-demo">
-        <div class="shock">
-          <div class="sk"><span class="bolt">⚡</span> 事件冲击 · 板块异动<span class="when">5/29 提前发酵</span></div>
-          <h3>美国商务部 5/31 落地半导体新规，A 股 5/29 情绪提前发酵</h3>
-          <div class="chain"><span class="node">出口管制升级</span><span class="arr">→</span><span class="node">国产替代预期生变</span><span class="arr">→</span><span class="node">资金出逃</span></div>
-          <div class="drop"><div class="pct">−5.66%</div><div class="meta">半导体板块<br>当日领跌两市</div></div>
-          <div class="judge">⏱ <b>持续性判断：</b>事件驱动型急跌，叠加板块前期涨幅过大，短期情绪扰动为主，但高估值环节的杀跌尚未充分释放，不宜抢反弹。</div>
+        <div class="persona">
+          <div class="persona-head">
+            <img src="./assets/avatars/event.png" alt="账户管家" />
+            <b>一句话判断</b>
+            <span class="tag">刚帮你体检完 · 14:32</span>
+          </div>
+          <p class="persona-say">今天账户<b class="red">亏损 7%</b>，主要因为<b>半导体回撤 + 仓位集中度偏高</b>。你这三周没动过仓，问题不在操作，在<b>持仓结构</b>。</p>
         </div>
 
-        <div class="card">
-          <div class="ch"><span class="step">02</span> 对你账户的影响 · 结论先行</div>
-          <div class="impact">
-            <div class="ib">总判断：<b class="hl">整体偏受损，且受损高度集中</b>。你的持仓<b>几乎全部位于本次异动板块内</b>，无对冲仓位，受损方向权重约 <b>86%</b>——这不是“分化”，是单边暴露。</div>
-            <div class="wbar"><i style="width:86%;background:var(--demo-up)"></i><i style="width:14%;background:#d8d9e0"></i></div>
-            <div class="wlegend"><span><i class="dot" style="background:var(--demo-up)"></i>半导体直接受损 86%</span><span><i class="dot" style="background:#d8d9e0"></i>现金/其他 14%</span></div>
+        <div class="duo">
+          <div class="card">
+            <div class="ch">账户健康度</div>
+            <div class="gauge">
+              <svg width="104" height="58" viewBox="0 0 104 58">
+                <path d="M9 53 A43 43 0 0 1 95 53" fill="none" stroke="#eef0f6" stroke-width="10" stroke-linecap="round"/>
+                <path d="M9 53 A43 43 0 0 1 33 12.5" fill="none" stroke="#d8463c" stroke-width="10" stroke-linecap="round"/>
+              </svg>
+              <div class="num" style="color:var(--demo-up)">38</div>
+              <div class="meta">偏弱 · 单边暴露</div>
+              <div class="delta">较昨日 −21</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ch">持仓分析</div>
+            <div class="meterset compact">
+              <div class="mrow"><span class="mlab">集中度</span><div class="meter"><i style="background:#3dbf87"></i><i style="background:#f0a836"></i><i style="background:#e2483c"></i></div><span class="mlv hi">高</span></div>
+              <div class="mrow"><span class="mlab">波动率</span><div class="meter"><i style="background:#3dbf87"></i><i style="background:#f0a836"></i><i style="background:#e2483c"></i></div><span class="mlv hi">高</span></div>
+              <div class="mrow"><span class="mlab">回撤</span><div class="meter"><i style="background:#3dbf87"></i><i style="background:#f0a836"></i><i style="background:#e2483c"></i></div><span class="mlv hi">高</span></div>
+              <div class="mrow"><span class="mlab">估值</span><div class="meter"><i style="background:#3dbf87"></i><i style="background:#f0a836"></i><i style="background:#e2483c"></i></div><span class="mlv hi">高</span></div>
+              <div class="maxis"><span>低</span><span>中</span><span>高</span></div>
+            </div>
           </div>
         </div>
 
         <div class="card">
-          <div class="ch"><span class="step">03</span> 传导到你的持仓股</div>
+          <div class="ch">关键个股解读<span class="conc">重仓个股占比 68%</span></div>
+          <div class="lead-copy">你的钱集中押在半导体上，今天这 7% 的回撤，<b>八成来自这一个方向</b>。三只重仓拖了主要的后腿：</div>
           <div class="stocks">
             <div class="stk">
               <div class="s1">
@@ -3454,17 +7188,7 @@
                 <div class="nm"><b>复旦微电</b><small>688385 · 半导体</small></div>
                 <div class="pr"><b class="red">−10.95%</b><small class="red">最大重仓 · 占比 38%</small></div>
               </div>
-              <div class="path"><b>直接身处异动板块、且踩中最敏感环节。</b>其主力产品 FPGA 大量使用美国 IP 与 EDA 工具，高端军工 / AI FPGA 受新规限制最直接，是本次政策传导的“震中”。</div>
-              <div class="riskflag">
-                <div class="rt"><span class="lamp"></span> 个股风险 · 红灯（最高优先级）</div>
-                <div class="rg">
-                  <div class="rcell"><small>当日跌幅</small><b>−10.95%</b></div>
-                  <div class="rcell"><small>5 月累计涨幅</small><b>+92%</b></div>
-                  <div class="rcell"><small>估值（PE）</small><b>100 倍+</b></div>
-                  <div class="rcell"><small>资金动向</small><b>集中出逃</b></div>
-                </div>
-                <div class="path" style="margin-top:9px;color:#7a2a22">前期涨幅与估值已严重透支，新规又恰好打在它最依赖的技术命门上，杀跌大概率尚未结束，是当前账户里最需要优先处理的风险点。</div>
-              </div>
+              <div class="path">你最大的一笔，也是今天跌得最狠的。<b>估值 100 倍 PE、5 月已涨 92%</b>，前期透支得多，这种回调来得也最急 —— 账户里最该先看住的就是它。</div>
             </div>
             <div class="stk">
               <div class="s1">
@@ -3472,7 +7196,7 @@
                 <div class="nm"><b>中芯国际</b><small>688981 · 晶圆制造</small></div>
                 <div class="pr"><b class="red">−6.20%</b><small class="red">占比 24%</small></div>
               </div>
-              <div class="path"><b>直接身处异动板块，但受损路径不同于复旦微电。</b>作为制造端龙头，受设备与材料进口受限的中长期压制，但国产替代逻辑反而被强化，跌幅小于设计端，属于“错杀中带预期修复”。</div>
+              <div class="path">制造端龙头，跌得比设计端轻，国产替代逻辑还在，属于“错杀里带修复预期”。</div>
             </div>
             <div class="stk">
               <div class="s1">
@@ -3480,150 +7204,268 @@
                 <div class="nm"><b>北方华创</b><small>002371 · 半导体设备</small></div>
                 <div class="pr"><b class="red">−4.10%</b><small class="red">占比 18%</small></div>
               </div>
-              <div class="path"><b>产业链传导，方向偏中性。</b>设备国产化是新规下的受益逻辑，跌幅主要来自板块情绪拖累而非基本面，是组合内相对抗跌、且具备承接资金回流潜力的一只。</div>
+              <div class="path">设备国产化的受益方向，相对抗跌，是组合里的压舱石。</div>
             </div>
             <div class="stk minor">
-              <div class="mtxt"><b>其余轻仓（合计约 6%）：</b>韦尔股份、兆易创新等同属半导体设计，跌幅与板块同步，因权重较轻，暂无紧迫操作需求，跟随组合统一处理即可。</div>
+              <div class="mtxt"><b>其余轻仓（合计约 6%）：</b>韦尔股份、兆易创新等跟随板块同步波动，权重小，暂时不用单独处理。</div>
             </div>
           </div>
         </div>
 
-        <div class="duo">
-          <div class="card">
-            <div class="ch">账户健康度</div>
-            <div class="gauge">
-              <svg width="100" height="56" viewBox="0 0 100 56"><path d="M8 52 A44 44 0 0 1 92 52" fill="none" stroke="#eef0f6" stroke-width="9" stroke-linecap="round"/><path d="M8 52 A44 44 0 0 1 36 13" fill="none" stroke="#e23b3b" stroke-width="9" stroke-linecap="round"/></svg>
-              <div class="num" style="color:var(--demo-up)">38</div><div class="meta">偏弱 · 单边暴露</div><div class="delta">较昨日 −21</div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="ch">风险热力</div>
-            <div class="heat">
-              <div class="hrow"><span class="hlab">集中度</span><div class="cells"><span style="background:#fbe6c8"></span><span style="background:#f5b78a"></span><span style="background:#e8704f"></span><span style="background:#d62f2f"></span></div></div>
-              <div class="hrow"><span class="hlab">回撤</span><div class="cells"><span style="background:#d8f0e4"></span><span style="background:#fbe6c8"></span><span style="background:#f5b78a"></span><span style="background:#e8704f"></span></div></div>
-              <div class="hrow"><span class="hlab">估值</span><div class="cells"><span style="background:#d8f0e4"></span><span style="background:#fbe6c8"></span><span style="background:#f5b78a"></span><span style="background:#d62f2f"></span></div></div>
-              <div class="axis"><span>低</span><span>中</span><span>高</span></div>
-            </div>
-          </div>
+        <div class="whyline">
+          <span class="ic">i</span>
+          <div><b>顺带说下今天为什么跌：</b>半导体新规消息发酵，板块当天领跌两市。这是外因 —— 但你账户跌得更明显，根子还是结构太集中。</div>
         </div>
 
         <div class="card">
-          <div class="ch"><span class="step">04</span> 操作建议 · 按紧迫程度排序</div>
+          <div class="ch">我的打理建议 · 按紧迫程度排序</div>
           <div class="ops">
-            <div class="opitem"><div class="pri p1">1</div><div class="ot"><b>优先处理复旦微电。</b>它是利空与高估值的共振点。若开盘无法企稳、或跌破关键支撑放量，应优先减仓兑现，不与之恋战。</div></div>
-            <div class="opitem"><div class="pri p2">2</div><div class="ot"><b>中芯、北方华创可暂持观察。</b>二者受损较轻且有国产替代支撑，待板块情绪企稳后再决定是否借其调整集中度。</div></div>
-            <div class="opitem"><div class="pri p3">3</div><div class="ot"><b>轻仓暂不动。</b>权重小、无紧迫性，跟随组合统一节奏即可。</div></div>
+            <div class="opitem"><div class="pri p1">1</div><div class="ot"><b>先把复旦微电盯住。</b>最贵、最集中，万一跌破支撑放量，第一个要处理的就是它，别恋战。</div></div>
+            <div class="opitem"><div class="pri p2">2</div><div class="ot"><b>中芯、北方华创再等等。</b>受损轻、有国产替代撑着，等情绪稳了再看要不要借它们降集中度。</div></div>
+            <div class="opitem"><div class="pri p3">3</div><div class="ot"><b>轻仓不用动。</b>占比小、不着急，跟着组合统一节奏走就行。</div></div>
           </div>
+        </div>
+
+        <div class="offer">
+          <img src="./assets/avatars/event.png" alt="账户管家" />
+          <div class="ot"><b>我看你这两天一直在查看复旦微电</b><small>要不要我帮你单独建个盯盘提醒？跌破支撑就第一时间叫你，不用自己一直刷。</small></div>
+          <div class="go">帮我盯</div>
+        </div>
+
+        <div class="tradeplan">
+          <img src="./assets/avatars/limit.png" alt="AI交易员" />
+          <div class="ot"><b>已经想好要减仓或调仓了</b><small>如果你心里已经有方向，我可以直接帮你呼叫 AI 交易员，把减仓 / 调仓拆成可执行的交易计划和条件单，你确认后再下单。</small></div>
+          <div class="go">呼叫交易员</div>
         </div>
 
         <div class="handoff">
-          <div class="av">王</div>
-          <div class="ht"><b>要不要减、减多少？这一步交给真人投顾</b><small>王思远已收到本次诊断摘要，可在你减仓决策前补充军工 FPGA 受限的更多细节，并协助确定减仓比例。</small></div>
+          <div class="av">张</div>
+          <div class="ht"><b>如果你不确定要不要减、减多少？可以跟真人投顾再聊聊</b><small>张思睿已收到这份体检摘要，可以在你拿主意前，帮你把减仓比例、节奏和军工 FPGA 受限的细节再过一遍。</small></div>
           <div class="go">预约</div>
         </div>
         <div class="qchips">
-          <div class="qchip">帮我盯紧复旦微电</div>
           <div class="qchip">给我一个降集中度方案</div>
           <div class="qchip">看更长区间盈亏</div>
         </div>
-        <div class="closer"><p>沿着产业链一层层拆，把“板块跌了”变成“你这只票为什么跌、该不该动”。<br>内容由 Yomi 调用账户管家生成 · 不构成投资建议</p></div>
+        <div class="tip">
+          <div class="quote">&ldquo;</div>
+          <p>作为你的管家，我想说<b>输赢从来不在一两天</b>，我们一起把结构慢慢调顺，<b>时间会站在你这边</b>。</p>
+        </div>
+        <div class="closer"><p>内容由 Yomi 调用账户管家生成 · 不构成投资建议</p></div>
       </div>
     `;
 
-    function addAgentProgress(step) {
-      return `<div class="builder-progress">${[1, 2, 3, 4].map((item) => `<span class="${item <= step ? "active" : ""}"></span>`).join("")}</div>`;
-    }
+    const traderThinking = `
+      <div class="acct-chat trd">
+        <div class="acct-think"><span>正在读取最新指令和交易执行情况</span><span class="dots"><i></i><i></i><i></i></span></div>
+      </div>
+    `;
 
-    function addAgentLead(step) {
-      if (step === 1) return "先通过对话确认用户想创建什么 Agent。创建流程分为：选择类型、选择 skill、确认提示词约束、创建并加入顶部入口。";
-      if (step === 2) return "用户已选择创建 T0 助手。现在进入 skill 选择步骤，确认它可以调用哪些金融能力。";
-      if (step === 3) return "已确认 T0 助手的核心 skill。现在通过对话设定提示词约束、风险边界和默认行为。";
-      return "T0 助手已创建完成，并加入顶部 Agent 区。用户后续可以直接点击入口或用自然语言唤起。";
-    }
+    const traderGreeting = `
+      <div class="acct-chat trd">
+        <div class="acct-greet">
+          <div class="gh"><img src="./assets/avatars/limit.png" alt="AI交易员" /><b>AI交易员</b></div>
+          <div class="think-row"><span class="tpill">深度思考</span><span class="tmeta">已读取最新指令和交易执行情况</span></div>
+          <p class="gsay">我收到了来自<b>账户管家的派单</b>，说你希望对持仓的<b>部分股票进行卖出操作</b>。<span class="ask">需要我帮你围绕以下要求制定交易计划吗？</span></p>
+          <div class="dispatch">
+            <div class="dl">来自管家的派单</div>
+            <div class="dbox">再跌就卖出复旦微电和中芯国际一定仓位<span class="caret"></span></div>
+            <div class="dchips"><span class="dchip">+ 选股结果</span><span class="dchip">+ 语音下达</span></div>
+          </div>
+          <div class="gchips"><div class="gchip primary" data-trd-plan>帮我制定交易计划</div><div class="gchip" data-trd-plan>调整派单要求</div></div>
+        </div>
+      </div>
+    `;
 
-    function addAgentBoard(step) {
-      const skillCard = step >= 2 ? `
-        <div class="builder-card">
-          <h3>${step === 2 ? "推荐 skill · 待确认" : "可调用 skill"}</h3>
-          <div class="skill-grid">
-            <div class="skill-pill"><span class="skill-dot">1</span>分时异动识别</div>
-            <div class="skill-pill"><span class="skill-dot">2</span>持仓成本分析</div>
-            <div class="skill-pill"><span class="skill-dot">3</span>T0 价差测算</div>
-            <div class="skill-pill"><span class="skill-dot">4</span>交易风险校验</div>
-          </div>
-        </div>
-      ` : "";
-      const constraintCard = step >= 3 ? `
-        <div class="builder-card">
-          <h3>提示词约束</h3>
-          <div class="constraint-list">
-            <div>只分析我的持仓股，不主动推荐陌生股票。</div>
-            <div>只在盘中波动超过阈值时提醒，并采用低打扰频率。</div>
-            <div>所有建议必须说明理由、价差空间和失败条件。</div>
-            <div>不直接下单，只生成可确认的交易方案。</div>
-          </div>
-        </div>
-      ` : "";
-      const createdCard = step >= 4 ? `
-        <div class="agent-created">
-          <div class="created-title">T0助手 已创建<span>已加入顶部</span></div>
-          <p class="builder-copy" style="margin-top:8px;">默认指令：/ 看看今天哪些持仓适合做T0；/ 监控我的高波动持仓；/ 生成一版T0交易方案。</p>
-        </div>
-      ` : "";
-      return `
-        ${addAgentProgress(step)}
-        <div class="builder-hero">
-          <h3>${step === 1 ? "新 Agent · 等待定义" : (step >= 4 ? "T0助手 · 创建完成" : "T0助手 · 创建中")}</h3>
-          <p class="builder-copy">${step === 1 ? "Yomi 会先询问用户要创建什么 Agent，再逐步确认 skill、提示词约束和发布方式。" : "在盘中监控持仓股波动，发现可做 T0 的价差机会，并给出可确认的操作建议。"}</p>
-          <div class="builder-steps">
-            <div class="builder-step"><span>1</span><div><b>选择类型</b><br>${step >= 2 ? "已选择：T0 助手。" : "等待用户选择要创建的 Agent 类型。"}</div></div>
-            <div class="builder-step"><span>2</span><div><b>Skill 选择</b><br>${step === 1 ? "等待用户确认可调用技能。" : (step === 2 ? "推荐分时异动、持仓成本、T0 价差、交易风险校验，等待确认。" : "已选择分时异动、持仓成本、T0 价差、交易风险校验。")}</div></div>
-            <div class="builder-step"><span>3</span><div><b>提示词约束</b><br>${step >= 3 ? "已设定低打扰、不自动下单和必须说明失败条件。" : "等待用户确认边界和风险约束。"}</div></div>
-            <div class="builder-step"><span>4</span><div><b>发布方式</b><br>${step >= 4 ? "已加入顶部 Agent 区，成为可复用入口。" : "确认后加入顶部 Agent 区。"}</div></div>
-          </div>
-        </div>
-        ${skillCard}
-        ${constraintCard}
-        ${createdCard}
-      `;
-    }
+    const traderPlan = `
+      <div class="orderplan">
+        <div class="ophead"><b>⬩ 我制定的下单策略</b><span class="wait">待你确认</span></div>
+        <div class="stkrow">A · 复旦微电 688385</div>
+        <div class="opline"><div class="opk">动作</div><div class="opv"><b>盘中跌破支撑位卖出半仓</b><small>挂条件单，触发即执行</small></div></div>
+        <div class="opline"><div class="opk">触发</div><div class="opv"><b>跌破 27.50（关键支撑）</b><small>条件单已就绪，不破不动</small></div></div>
+        <div class="stkrow">B · 中芯国际 688981</div>
+        <div class="opline"><div class="opk">动作</div><div class="opv"><b>135 – 140 区间分批卖出</b><small>逢高减仓，落在区间内分笔出</small></div></div>
+        <div class="opline"><div class="opk">节奏</div><div class="opv"><b>分 3 笔 · 间隔 10 分钟</b><div class="rhythm"><i class="on"></i><i class="on"></i><i></i></div></div></div>
+        <div class="discipline">🛡 <b>纪律线：</b>两单均设条件触发，盘中只在你设定的价位执行；任一笔成交后第一时间通知你，剩余笔可随时叫停。</div>
+        <div class="opbtns"><button class="sim">先模拟</button><button class="go" data-trd-confirm>确认执行 · 下达指令</button></div>
+      </div>
+    `;
 
-    function addAgentChat(step) {
-      const chooseType = `
-        <div class="assistant-head">
-          <img src="./assets/avatars/yomi.png" alt="Yomi" />
-          <div class="assistant-name">Yomi</div>
-        </div>
-        <div class="assistant-reply">
-          你想创建一个什么类型的 Agent？我可以先从常用金融能力里帮你搭一版。
-          <div class="builder-options">
-            <button data-add-step="2">T0</button><button>选股</button><button>复盘</button><button>风控</button><button>公告解读</button><button>持仓诊断</button>
-          </div>
-        </div>
-      `;
-      const chooseSkill = step >= 2 ? `
-        <div class="agent-confirm">我想做一个 T0 助手，帮我盯盘内波动机会。</div>
-        <div class="assistant-reply">
-          好的，我会把它定义成“盘中 T0 Agent”。下一步先选择它能调用的 skill。建议开启：分时异动识别、持仓成本分析、T0 价差测算、交易风险校验；默认关闭自动下单。
-          <div class="skill-recommend"><span>分时异动识别</span><span>持仓成本分析</span><span>T0 价差测算</span><span>交易风险校验</span></div>
-          <div class="builder-action-row"><button data-add-step="3" class="primary">确认这些 skill</button><button>调整 skill</button></div>
-        </div>
-      ` : "";
-      const setConstraint = step >= 3 ? `
-        <div class="agent-confirm">可以，先不要自动下单，只给建议。</div>
-        <div class="assistant-reply">
-          已记录。它将只分析你的持仓股，采用低打扰提醒；每次建议都必须给出理由、价差空间和失败条件。
-          <div class="builder-options"><button data-add-step="4" class="primary">创建并添加到顶部</button><button>继续调整</button></div>
-        </div>
-      ` : "";
-      const created = step >= 4 ? `
-        <div class="agent-confirm">创建并添加到顶部。</div>
-        <div class="assistant-reply">已创建 <b>T0助手</b>。我会把它放到 AI交易员后面。之后你可以直接点击它，或者说“让 T0助手看一下今天能不能做价差”。</div>
-      ` : "";
-      return `<div class="agent-chat-flow">${chooseType}${chooseSkill}${setConstraint}${created}</div>`;
-    }
+    const traderChips = `
+      <div class="qchips trd"><div class="qchip primary" data-trd-tasks>查询其他交易计划</div><div class="qchip">改触发价</div><div class="qchip">只下复旦微电这一单</div></div>
+    `;
+
+    const traderTasks = `
+      <div class="ai-plan-list">
+        <div class="service-head"><h3>其他正在执行的交易任务</h3><span class="service-state">查看全部</span></div>
+        <div class="plan-tabs"><span class="active">全部 8</span><span>进行中 4</span><span>待确认 1</span><span>已完成 3</span></div>
+        <div class="plan-item"><div class="plan-badge">金</div><div><b>黄金ETF盈利保护计划</b><small>最新动态：09:31 已创建保护性止盈条件单，等待触发</small></div><div class="plan-status">条件单监控中</div></div>
+        <div class="plan-item"><div class="plan-badge blue">宁</div><div><b>宁德时代观察计划</b><small>今日继续观察低吸机会，暂未触发买入</small></div><div class="plan-status">第2天</div></div>
+        <div class="plan-item"><div class="plan-badge purple">涨</div><div><b>涨停猎手模拟计划</b><small>已输出12只候选股，等待收益前模拟买入</small></div><div class="plan-status">监控中</div></div>
+        <div class="plan-item"><div class="plan-badge orange">万</div><div><b>万科A波段处理计划</b><small>Yomi 已协调 AI交易员给出两种方案</small></div><div class="plan-status" style="color:#d8463c">等待选择</div></div>
+        <div class="plan-disc">内容由 Yomi 调用交易员生成 · 不构成投资建议</div>
+      </div>
+    `;
 
     const agentViews = {
+      morning: {
+        title: "早点听 · 你的盘前资讯管家",
+        lead: "我会结合今日市场信息和你近期的关注偏好，先和你确认范围，再生成真正与你相关的盘前资讯。",
+        prompt: "补充最近关注的方向后，早点听会重新整理热门线索、环球要闻和关注票影响。",
+        action: "播放60秒盘前摘要",
+        command: "/ 补充我的关注方向",
+        avatar: "./assets/avatars/morning.png",
+        name: "早点听Agent",
+        executeTitle: "Yomi",
+        executeLead: "Yomi 正在结合你的持仓、近期浏览和市场变化，为你准备今天的盘前内容。",
+        executeAnswer: "今天重点关注非农预期对成长股估值的影响、英伟达对算力链的带动，以及宁德时代和恩捷股份所在新能源链的资金承接。",
+        introBoard: `
+          <div class="morning-chat" id="morningConversation">
+            <div class="assistant-head">
+              <img src="./assets/avatars/morning.png" alt="早点听" />
+              <div class="assistant-name">早点听</div>
+            </div>
+            <div class="morning-chat-meta"><span>深度思考</span><span>已读取持仓与近期关注⌄</span></div>
+            <div class="assistant-reply">
+              <p>早上好，我为您整理好了今天盘前需关注的隔夜要点与热门板块机会。</p>
+              <p>我看您最近持仓了<strong>宁德时代、恩捷股份</strong>，还持续关注<strong>美股英伟达</strong>的相关资讯，也经常问我美国非农数据公布前后的各方观点和市场预期。</p>
+              <p><strong>要不要我结合这些关注，帮您梳理相关资讯，并分析今天值得留意的机会股票？</strong></p>
+              <p>如果您今天还有想特别让我关注的股票、行业或市场事件，直接跟我说，我会一起放进这份盘前早报里。</p>
+            </div>
+            <div class="morning-suggestions">
+              <button type="button" data-voice-prompt="还想关注光模块，也看看美股非农超预期的影响">光模块 + 非农影响</button>
+              <button type="button" data-voice-prompt="再加上储能和消费电子">储能 + 消费电子</button>
+              <button type="button" data-voice-prompt="就按你看到的内容帮我整理">直接帮我整理</button>
+            </div>
+          </div>
+        `,
+        chat: `
+          <div class="dialog-placeholder empty"></div>
+        `,
+        grid: `
+          <div class="sector">外围市场<br><span class="num">美股科技 +1.2%</span></div>
+          <div class="sector">重点公告<br><span class="num">宁德时代</span></div>
+          <div class="sector hot">自选异动<br><span class="num">3只预警</span></div>
+          <div class="sector negative">风险提示<br><span class="num">汇率波动</span></div>
+          <div class="sector negative">资金面<br><span class="num">北向观望</span></div>
+          <div class="sector">今日关注<br><span class="num">9:30 开盘</span></div>
+        `,
+        board: `
+          <div class="morning-report-shell" id="morningReportShell">
+          <div class="morning-collapsed-handle" id="morningExpand">
+            <span><strong>早点听报告已收起</strong><br>保留刚才的定制内容</span>
+            <span>展开⌄</span>
+          </div>
+          <div class="morning-board">
+            <div class="morning-hero">
+              <div class="morning-kicker"><span>08:00 已更新</span></div>
+              <h3>今日专属早报已准备好</h3>
+              <p>已结合你的持仓和关注方向，整理宁德时代、恩捷股份、英伟达、美国非农及光模块相关机会。</p>
+              <div class="morning-play" id="morningPlayer">
+                <button id="morningPlay" aria-label="播放盘前摘要">▶</button>
+                <div><strong id="morningPlayTitle">AI主持人播客：5:28</strong><small id="morningPlayStatus">点击播放 · 为你压缩 128 条信息</small></div>
+                <div class="morning-wave"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              </div>
+            </div>
+
+            <section class="morning-card clues">
+              <div class="morning-section-title">必看线索 <span>2 条与你高度相关</span></div>
+              <div class="morning-clue-brief">
+                <div class="clue-brief-top">
+                  <span class="clue-brief-index">01</span>
+                  <div class="clue-brief-name"><b>中国海油</b><strong>+1.33%</strong><small>能源供应扰动 · 来源 2 条</small></div>
+                  <span class="clue-brief-relation">你的持仓</span>
+                </div>
+                <p class="clue-brief-event">霍尔木兹海峡通航受阻，油价存在事件性上行窗口。</p>
+                <div class="clue-path"><span>海峡封锁</span><span>国际油价上行</span><span>盈利预期抬升</span></div>
+                <div class="clue-verdict"><b>核心判断</b><p>公司约 69% 产量来自国内，供应受扰较小，油价上涨更直接增厚盈利，短期影响偏正向。</p></div>
+                <div class="clue-watch"><span>通航谈判进展；恢复通航将削弱油价溢价</span><button type="button">持续跟踪</button></div>
+              </div>
+              <div class="morning-clue-brief">
+                <div class="clue-brief-top">
+                  <span class="clue-brief-index">02</span>
+                  <div class="clue-brief-name"><b>恩捷股份</b><strong>+1.33%</strong><small>储能需求信号 · 来源 2 条</small></div>
+                  <span class="clue-brief-relation">近期关注</span>
+                </div>
+                <p class="clue-brief-event">碳酸锂价格快速上涨，市场重新交易储能与电池需求改善。</p>
+                <div class="clue-path"><span>锂价上涨</span><span>储能需求升温</span><span>隔膜需求改善</span></div>
+                <div class="clue-verdict"><b>核心判断</b><p>事件对隔膜龙头构成间接利好，但利润弹性仍取决于订单兑现、产品价格与行业竞争格局。</p></div>
+                <div class="clue-watch"><span>订单和隔膜价格能否同步改善</span><button type="button">查看竞争格局</button></div>
+              </div>
+            </section>
+
+            <section class="morning-card global-news">
+              <div class="morning-section-title">隔夜环球要闻 <span>宏观与海外映射</span></div>
+              <p class="morning-copy">博通业绩指引不及预期，引发美股科技与芯片板块抛售，资金转向医疗、金融等低位方向。道指收涨 1.73% 并创历史新高，标普 500 小幅收涨，纳指微跌；欧洲主要股指普涨，A 股三大指数集体收跌。大类资产方面，美债收益率下行、油价回调，黄金与白银均录得上涨。</p>
+              <div class="morning-market-grid" aria-label="隔夜市场指数变化">
+                <div class="morning-market-item"><span>道琼斯</span><strong>+1.73%</strong><small>创历史新高</small></div>
+                <div class="morning-market-item"><span>标普 500</span><strong>小幅收涨</strong><small>低位板块承接</small></div>
+                <div class="morning-market-item"><span>纳斯达克</span><strong class="down">微跌</strong><small>科技芯片承压</small></div>
+                <div class="morning-market-item"><span>欧洲股市</span><strong>普涨</strong><small>主要指数走强</small></div>
+                <div class="morning-market-item"><span>A 股三大指数</span><strong class="down">集体收跌</strong><small>风险偏好偏弱</small></div>
+                <div class="morning-market-item"><span>黄金 / 白银</span><strong>上涨</strong><small>避险需求升温</small></div>
+              </div>
+              <div class="morning-news-list">
+                <div class="morning-news-item"><b>地缘动态</b><p>特朗普称黎以谈判取得进展，不排除与伊朗最高领袖会晤，同时乐见俄乌推进领导人会晤。普京确认俄方愿以安克雷奇会晤共识为基础与乌方谈判，泽连斯基也已公开提议两国领导人会面，市场关注各方能否形成阶段性妥协。</p></div>
+                <div class="morning-news-item"><b>能源风险</b><p>俄罗斯副总理诺瓦克警告，若中东战事持续，国际原油市场可能面临供应短缺；世界粮食计划署提示，能源与食品价格上涨将进一步加剧全球粮食安全风险。</p></div>
+                <div class="morning-news-item"><b>产业与流动性</b><p>Anthropic 呼吁全球暂缓前沿 AI 研发，警惕递归式自我改进风险；Coinbase 推出 SpaceX 上市前永续合约拓展新业务；黑石因赎回激增限制旗下 790 亿美元旗舰私募信贷基金赎回，引发市场对私募资产流动性的担忧。</p></div>
+              </div>
+              <div class="morning-opportunity-title">关联板块与机会个股 <span>由隔夜事件推演</span></div>
+              <div class="morning-opportunity">
+                <b>金融 / 医疗</b>
+                <div><strong>低位板块承接科技资金轮动</strong><small>关注中国平安、招商银行、恒瑞医药的开盘强度与资金持续性。</small></div>
+                <span>偏正向</span>
+              </div>
+              <div class="morning-opportunity">
+                <b>黄金 / 白银</b>
+                <div><strong>贵金属上涨叠加避险需求升温</strong><small>关注紫金矿业、山东黄金、盛达资源，观察金银价格能否延续强势。</small></div>
+                <span>机会</span>
+              </div>
+              <div class="morning-opportunity">
+                <b>芯片 / 光模块</b>
+                <div><strong>博通指引扰动科技估值，但 AI 投资主线仍待验证</strong><small>中际旭创、新易盛、天孚通信关注承接力；高估值芯片方向警惕补跌。</small></div>
+                <span class="watch">分化观察</span>
+              </div>
+              <div class="morning-opportunity">
+                <b>油气 / 航运</b>
+                <div><strong>油价回调与中东供应风险形成博弈</strong><small>中国海油、中远海能暂以事件跟踪为主，等待油价与运价出现方向确认。</small></div>
+                <span class="watch">事件观察</span>
+              </div>
+              <button class="morning-more">查看 5 条信息来源</button>
+            </section>
+
+            <section class="morning-card meeting-view">
+              <div class="morning-section-title">今日晨会观点 <span>策略结论</span></div>
+              <p class="morning-copy">科技成长仍是中期主线，但非农超预期会带来估值端扰动。优先选择订单、业绩或产业进度能够验证的细分方向：光模块关注高速产品放量，人形机器人关注定点和量产节奏，新能源观察价格与盈利拐点。</p>
+            </section>
+
+            <section class="morning-card industries">
+              <div class="morning-section-title">发现的行业 <span>2 个重点方向</span></div>
+              <div class="morning-stock"><div><b>通信设备</b><small>海外 AI 算力需求持续，光模块从 800G 向 1.6T 升级。个股表现可能继续向具备海外客户和高速产品能力的龙头集中。</small></div><span>正向</span></div>
+              <div class="morning-stock"><div><b>新能源电池</b><small>短期受海外利率预期扰动，中期仍需回到需求、产能利用率与海外扩张，龙头抗波动能力相对更强。</small></div><span>观察</span></div>
+            </section>
+
+            <section class="morning-card stocks">
+              <div class="morning-section-title">发现的个股 <span>结合持仓与近期关注</span></div>
+              <div class="morning-stock"><div><b>英伟达</b><small>全球 AI 算力产业的情绪与基本面锚点，走势直接影响 A 股服务器、PCB、液冷与光模块风险偏好。</small></div><span>隔夜强势</span></div>
+              <div class="morning-stock"><div><b>宁德时代</b><small>自身逻辑仍来自全球出货、技术迭代和海外产能，关注宏观扰动下能否保持相对强势。</small></div><span>持仓</span></div>
+              <div class="morning-stock"><div><b>恩捷股份</b><small>除非农带来的估值扰动外，更需要跟踪隔膜需求、价格竞争和盈利能力能否修复。</small></div><span>持仓</span></div>
+              <div class="morning-stock"><div><b>新易盛</b><small>高速光模块需求预期强化，产品结构升级与产能释放决定盈利弹性。</small></div><span>新增关注</span></div>
+            </section>
+
+            <section class="morning-card themes">
+              <div class="morning-section-title">发现的主题 <span>你的主题关注</span></div>
+              <div class="morning-stock"><div><b>美国非农</b><small>关注就业数据与市场预期的偏差，以及由此带来的降息概率、美债收益率和成长股估值变化。</small></div><span>宏观主线</span></div>
+              <div class="morning-stock"><div><b>光模块</b><small>英伟达强势与 AI 集群扩张继续提供产业催化，同时关注美债收益率和板块成交量。</small></div><span>重点关注</span></div>
+              <button class="morning-more" id="morningMore">展开完整传导逻辑</button>
+              <div class="morning-detail" id="morningDetail">非农超预期会压低短期降息概率，对高估值科技形成估值约束；但英伟达及 AI 资本开支趋势仍支撑光模块需求。若利率上行而科技股维持强势，光模块的相对强度更值得关注。</div>
+            </section>
+
+            <div class="morning-disclaimer">内容由早点听 Agent 整理 · 信息仅供研究参考，不构成投资建议</div>
+          </div>
+          </div>
+        `
+      },
       account: {
         title: "账户管家 · 板块异动诊断",
         lead: "半导体新规冲击提前发酵，我把它对你账户的影响沿事件、板块和持仓股拆开了。",
@@ -3632,8 +7474,8 @@
         command: "/ 查看账户管家结论",
         avatar: "./assets/avatars/event.png",
         name: "账户管家",
-        executeTitle: "账户管家",
-        executeLead: "半导体新规砸下来，我把它对你账户的影响拆开了：事件冲击、账户暴露、个股传导和操作优先级。",
+        executeTitle: "",
+        executeLead: "",
         executeAnswer: "我已整理好板块异动诊断。复旦微电是当前最高优先级风险点；中芯国际、北方华创可暂持观察。",
         chat: `
           <div class="dialog-placeholder empty"></div>
@@ -3785,8 +7627,8 @@
         command: "/ 跟随止盈我的黄金ETF",
         avatar: "./assets/avatars/limit.png",
         name: "AI交易员",
-        executeTitle: "AI交易员 Yomi",
-        executeLead: "我披露自己的模拟持仓、动作记录和回测结果，你确认后才进入跟随操作。",
+        executeTitle: "",
+        executeLead: "",
         executeAnswer: "我已基于事件捕手 4月11日入选组合启动模拟交易。当前持仓和动作都可追踪，回测暂时跑赢沪深300和超额收益基准。",
         chat: `
           <div class="dialog-placeholder empty"></div>
@@ -4067,17 +7909,156 @@
       }
     };
 
+    function bindMorningBoardInteractions() {
+      const playButton = document.getElementById("morningPlay");
+      const player = document.getElementById("morningPlayer");
+      const playTitle = document.getElementById("morningPlayTitle");
+      const playStatus = document.getElementById("morningPlayStatus");
+      const moreButton = document.getElementById("morningMore");
+      const detail = document.getElementById("morningDetail");
+      const collapseButton = document.getElementById("morningFloatingCollapse");
+      if (playButton) {
+        playButton.addEventListener("click", () => {
+          const isPlaying = player.classList.toggle("playing");
+          playButton.textContent = isPlaying ? "Ⅱ" : "▶";
+          playTitle.textContent = isPlaying ? "AI主持人正在播报" : "AI主持人播客：5:28";
+          playStatus.textContent = isPlaying ? "00:18 / 05:28 · 环球要闻与机会解读" : "点击播放 · 为你压缩 128 条信息";
+        });
+      }
+      if (moreButton) {
+        moreButton.addEventListener("click", () => {
+          const isOpen = detail.classList.toggle("open");
+          moreButton.textContent = isOpen ? "收起完整传导逻辑" : "展开完整传导逻辑";
+        });
+      }
+      if (collapseButton) {
+        collapseButton.addEventListener("click", () => {
+          phone.classList.remove("morning-report-open");
+          renderMorningReadyConversation(agentViews.morning, morningLastUserText);
+          executeBoard.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      }
+    }
+
+    function escapeMessage(userText) {
+      return userText.replace(/[<>&"']/g, (character) => ({
+        "<": "&lt;",
+        ">": "&gt;",
+        "&": "&amp;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[character]);
+    }
+
+    function renderMorningReadyConversation(view, userText) {
+      phone.classList.remove("morning-report-open");
+      const safeUserText = escapeMessage(userText || "就按你看到的内容帮我整理。");
+      executeLead.textContent = "Yomi 已经完成整理。";
+      executeBoard.innerHTML = `
+        <div class="morning-dialog-state answered">
+          <div class="morning-top-handle" id="morningTopExpand">
+            <span>早点听报告已收起</span>
+            <span>下拉展开</span>
+          </div>
+          ${view.introBoard}
+          <div class="morning-user-message">${safeUserText}</div>
+          <div class="assistant-head">
+            <img src="./assets/avatars/morning.png" alt="早点听" />
+            <div class="assistant-name">早点听</div>
+          </div>
+          <div class="morning-chat-meta"><span>任务完成</span><span>专属早报已生成⌄</span></div>
+          <div class="assistant-reply">好的，都整理好了。我把最影响你持仓和关注方向的内容放在前面，也补充了对应的传导分析和观察建议。</div>
+          <div class="morning-result-card" id="morningResultCard">
+            <div class="morning-result-icon">早</div>
+            <div><strong>今日专属早报已整理好</strong><small>必看线索、隔夜环球、行业、个股与主题</small></div>
+            <span>›</span>
+          </div>
+        </div>
+      `;
+      const resultCard = document.getElementById("morningResultCard");
+      if (resultCard) {
+        resultCard.addEventListener("click", () => openMorningReport(view));
+      }
+      const topExpand = document.getElementById("morningTopExpand");
+      if (topExpand) {
+        topExpand.addEventListener("click", () => openMorningReport(view));
+      }
+    }
+
+    function openMorningReport(view) {
+      executeLead.textContent = "这是按你的持仓、近期浏览和语音补充生成的专属早报。";
+      executeBoard.innerHTML = view.board;
+      phone.classList.add("morning-report-open");
+      bindMorningBoardInteractions();
+      executeBoard.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function renderMorningResult(view, userText) {
+      phone.classList.remove("morning-report-open");
+      morningLastUserText = userText;
+      const safeUserText = escapeMessage(userText);
+      executeBoard.innerHTML = `
+        <div class="morning-dialog-state answered">
+          ${view.introBoard}
+          <div class="morning-user-message">${safeUserText}</div>
+          <div class="assistant-head">
+            <img src="./assets/avatars/morning.png" alt="早点听" />
+            <div class="assistant-name">早点听</div>
+          </div>
+          <div class="morning-chat-meta"><span>深度思考</span><span>正在调用早点听能力⌄</span></div>
+          <div class="assistant-reply">收到。我正在结合你的持仓、近期浏览和刚补充的内容，重新筛选今天真正相关的信息...</div>
+        </div>
+      `;
+      executeLead.textContent = "Yomi 正在整理你的专属早报。";
+      agentCustomTimer = setTimeout(() => {
+        renderMorningReadyConversation(view, userText);
+        agentCustomTimer = setTimeout(() => openMorningReport(view), 650);
+      }, 700);
+    }
+
+    function simulateMorningVoice(view, userText) {
+      const voiceInput = document.getElementById("agentVoiceInput");
+      if (!voiceInput) return;
+      voiceInput.closest(".agent-input-dock")?.classList.remove("morning-cta-hint");
+      voiceInput.classList.add("recording");
+      voiceInput.textContent = "正在聆听…";
+      setTimeout(() => {
+        voiceInput.classList.remove("recording");
+        voiceInput.textContent = "按住说话，继续补充";
+        renderMorningResult(view, userText);
+      }, 650);
+    }
+
     function renderAgent(agent) {
       clearTimeout(agentCustomTimer);
+      clearTimeout(accountTimer);
       const view = agentViews[agent] || agentViews.account;
       switchTitle.textContent = view.title;
       switchLead.textContent = view.lead;
-      switchGrid.innerHTML = agent === "addAgent" ? addAgentBoard(currentAddAgentStep) : (agent === "account" ? accountDemoResult : view.grid);
+      switchGrid.innerHTML = agent === "addAgent" ? addAgentBoard(currentAddAgentStep) : (agent === "account" ? accountDemoResult : (agent === "morning" ? view.introBoard : view.grid));
       switchPrompt.textContent = view.prompt;
       runAgent.textContent = view.action;
       executeTitle.textContent = view.executeTitle;
+      executeTitle.style.display = view.executeTitle ? "" : "none";
       executeLead.textContent = agent === "addAgent" ? addAgentLead(currentAddAgentStep) : view.executeLead;
-      executeBoard.innerHTML = agent === "addAgent" ? addAgentBoard(currentAddAgentStep) : (agent === "account" ? accountDemoResult : view.board);
+      executeLead.style.display = (agent === "addAgent" || view.executeLead) ? "" : "none";
+      if (agent === "addAgent") {
+        executeBoard.innerHTML = addAgentBoard(currentAddAgentStep);
+      } else if (agent === "account") {
+        executeBoard.innerHTML = accountThinking;
+        accountTimer = setTimeout(() => {
+          executeBoard.innerHTML = accountGreeting;
+          wireAccountChips();
+        }, 1400);
+      } else if (agent === "trader") {
+        trd = { plan: false, confirmed: false, tasks: false };
+        executeBoard.innerHTML = traderThinking;
+        accountTimer = setTimeout(() => renderTrader(), 1400);
+      } else if (agent === "morning") {
+        executeBoard.innerHTML = view.introBoard;
+      } else {
+        executeBoard.innerHTML = view.board;
+      }
       agentScroll.innerHTML = agent === "addAgent" ? addAgentChat(currentAddAgentStep) : (view.chat || `
         <div class="dialog-placeholder">
           <strong>对话区</strong>
@@ -4097,6 +8078,33 @@
           }
         }, 2000);
       }
+
+      if (agent === "morning") {
+        const voiceInput = document.getElementById("agentVoiceInput");
+        const inputDock = voiceInput?.closest(".agent-input-dock");
+        inputDock?.classList.add("morning-cta-hint");
+        if (voiceInput) {
+          voiceInput.textContent = "按住说话，补充你的关注";
+          voiceInput.onclick = () => simulateMorningVoice(
+            view,
+            "最近还想关注光模块，也帮我看看美股非农超预期会有什么影响。"
+          );
+        }
+        document.querySelectorAll("[data-voice-prompt]").forEach((button) => {
+          button.addEventListener("click", () => {
+            inputDock?.classList.remove("morning-cta-hint");
+            simulateMorningVoice(view, button.dataset.voicePrompt);
+          });
+        });
+      } else {
+        const voiceInput = document.getElementById("agentVoiceInput");
+        voiceInput?.closest(".agent-input-dock")?.classList.remove("morning-cta-hint");
+        if (voiceInput) {
+          voiceInput.classList.remove("recording");
+          voiceInput.textContent = "问 Agent 任何问题...";
+          voiceInput.onclick = null;
+        }
+      }
       dockCommand.querySelector("span:first-child").textContent = view.command || "/ 开始快速交易";
     }
 
@@ -4109,6 +8117,7 @@
     function setState(state, navState = state) {
       phone.dataset.state = state;
       phone.dataset.nav = navState;
+      if (navState !== "morning") phone.classList.remove("morning-report-open");
       phone.classList.remove("force-expanded");
       if (state !== "home") phone.classList.remove("workbench-collapsed");
       buttons.forEach((button) => button.classList.toggle("active", button.dataset.stateButton === navState));
@@ -4122,6 +8131,11 @@
       if (agent === "event") return;
       if (agent === "yomi") {
         setState("home");
+        return;
+      }
+      if (agent === "morning") {
+        currentAgent = "morning";
+        setState("agent", "morning");
         return;
       }
       if (agent === "addAgent") {
@@ -4151,6 +8165,11 @@
         if (target === "trader") {
           currentAgent = "trader";
           setState("agent", "trader");
+          return;
+        }
+        if (target === "morning") {
+          currentAgent = "morning";
+          setState("agent", "morning");
           return;
         }
         if (target === "agentCustom") {
@@ -4203,6 +8222,20 @@
         currentAgent = "traderCustom";
         setState("agent", "agentCustom");
       }
+      if (currentAgent === "morning") {
+        const reportShell = document.getElementById("morningReportShell");
+        if (reportShell && reportShell.classList.contains("collapsed")) {
+          reportShell.classList.remove("collapsed");
+          return;
+        }
+        const detail = document.getElementById("morningDetail");
+        const moreButton = document.getElementById("morningMore");
+        if (detail && moreButton) {
+          detail.classList.add("open");
+          moreButton.textContent = "收起完整传导逻辑";
+          detail.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
     });
     agentScroll.addEventListener("click", (event) => {
       const nextButton = event.target.closest("[data-add-step]");
@@ -4216,6 +8249,37 @@
       phone.classList.add("workbench-signals-state");
       setState("home");
     });
+    kycScreen.addEventListener("click", (event) => {
+      const next = event.target.closest("[data-kyc-next]");
+      if (next) {
+        const step = Number(next.dataset.kycNext);
+        kycScreen.dataset.step = String(step);
+        kycScreen.querySelectorAll(".kyc-progress span").forEach((bar, index) => {
+          bar.classList.toggle("active", index < step);
+        });
+        return;
+      }
+      const done = event.target.closest("[data-kyc-done]");
+      if (done) {
+        phone.classList.add("kyc-complete");
+        phone.classList.remove("guide-dismissed");
+        setState("home");
+      }
+    });
+    quickTrade.addEventListener("click", () => {
+      if (phone.dataset.state === "trade") {
+        setState("home");
+        return;
+      }
+      setState("trade", "trade");
+    });
+    useRecommend.addEventListener("click", () => {
+      phone.classList.add("guide-dismissed");
+    });
+    goCustomize.addEventListener("click", () => {
+      phone.classList.add("guide-dismissed");
+      setState("custom");
+    });
     renderAgent(currentAgent);
     updateNotes("home");
 
@@ -4226,4 +8290,5 @@
     });
   </script>
 </body>
+
 </html>
