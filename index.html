@@ -654,7 +654,7 @@
     .agent-bar {
       position: relative;
       z-index: 7;
-      height: 146px;
+      height: 150px;
       padding: 0 10px;
       display: flex;
       gap: 8px;
@@ -721,14 +721,16 @@
     .agent-status {
       position: absolute;
       z-index: 3;
-      right: 7px;
-      top: 3px;
+      left: 50%;
+      top: -9px;
+      transform: translateX(-50%);
       height: 18px;
       padding: 0 6px;
       border-radius: 9px;
       display: flex;
       align-items: center;
       gap: 4px;
+      white-space: nowrap;
       background: rgba(255, 255, 255, 0.88);
       color: #6d778b;
       font-size: 9px;
@@ -791,6 +793,42 @@
     .agent.add .avatar-pad {
       background: rgba(255, 255, 255, 0.38);
       border: 1px dashed rgba(35, 48, 95, 0.22);
+    }
+
+    .agent.create-agent .avatar-pad {
+      border: 1px solid rgba(45, 58, 103, 0.12);
+      background: rgba(255, 255, 255, 0.66);
+      box-shadow: 0 10px 22px rgba(45, 58, 103, 0.08);
+    }
+
+    .agent.create-agent .plus-icon {
+      position: relative;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #2d3a67;
+      box-shadow: 0 8px 16px rgba(45, 58, 103, 0.18);
+    }
+
+    .agent.create-agent .plus-icon::before,
+    .agent.create-agent .plus-icon::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 15px;
+      height: 2px;
+      border-radius: 2px;
+      background: #fff;
+      transform: translate(-50%, -50%);
+    }
+
+    .agent.create-agent .plus-icon::after {
+      transform: translate(-50%, -50%) rotate(90deg);
+    }
+
+    .agent.create-agent.active::after {
+      content: none;
     }
 
     .agent.t0-agent {
@@ -1275,6 +1313,25 @@
     .phone[data-state="agent"] .agent-panel {
       display: flex;
       flex-direction: column;
+    }
+
+    .phone[data-state="switch"] .agent-panel {
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      touch-action: pan-y;
+    }
+
+    .phone[data-state="switch"] .agent-panel::-webkit-scrollbar {
+      display: none;
+    }
+
+    .phone[data-state="switch"] .switch-view,
+    .phone[data-state="switch"] .agent-card.compact,
+    .phone[data-state="switch"] .create-agent-flow,
+    .phone[data-state="switch"] .create-step {
+      touch-action: pan-y;
     }
 
     @keyframes rise {
@@ -3739,6 +3796,224 @@
       background: #2f66f6;
     }
 
+    .builder-generation {
+      display: grid;
+      gap: 9px;
+      margin-top: 12px;
+    }
+
+    .builder-generation-item {
+      display: grid;
+      grid-template-columns: 24px 1fr auto;
+      gap: 9px;
+      align-items: center;
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(23, 36, 78, 0.04);
+      color: var(--ink);
+      font-size: 12px;
+    }
+
+    body.dark .builder-generation-item {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .builder-generation-item .skill-dot {
+      background: rgba(127, 138, 164, 0.12);
+      color: var(--muted);
+    }
+
+    .builder-generation-item.active .skill-dot,
+    .builder-generation-item.done .skill-dot {
+      background: rgba(16, 94, 255, 0.12);
+      color: var(--blue);
+    }
+
+    .builder-generation-item b {
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .builder-generation-item small {
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .builder-generation-state {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .builder-generation-item.active .builder-generation-state {
+      color: var(--blue);
+    }
+
+    .builder-generation-item.done .builder-generation-state {
+      color: var(--green);
+    }
+
+    .create-agent-flow {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .create-step {
+      border-radius: 14px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.66);
+    }
+
+    body.dark .create-step,
+    body.dark .visualization-step {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .create-step h3 {
+      margin: 0 0 8px;
+      color: var(--navy);
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .create-step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .create-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .create-tags span {
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 14px;
+      background: rgba(16, 94, 255, 0.08);
+      color: var(--blue);
+      font-size: 12px;
+      line-height: 28px;
+      white-space: nowrap;
+    }
+
+    .create-input {
+      min-height: 72px;
+      margin-top: 10px;
+      border-radius: 12px;
+      padding: 11px 12px;
+      border: 1px dashed rgba(45, 58, 103, 0.2);
+      background: rgba(255, 255, 255, 0.48);
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .create-preview {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 10px;
+      align-items: center;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      background: var(--surface-strong);
+      box-shadow: 0 8px 20px rgba(45, 58, 103, 0.06);
+    }
+
+    .create-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background: #2d3a67;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .create-preview b,
+    .create-preview small {
+      display: block;
+    }
+
+    .create-preview small {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .visualization-steps {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .visualization-step {
+      display: grid;
+      grid-template-columns: 26px 1fr auto;
+      gap: 9px;
+      align-items: center;
+      min-height: 48px;
+      padding: 10px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.6);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .visualization-step .step-dot {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(16, 94, 255, 0.1);
+      color: var(--blue);
+    }
+
+    .visualization-step b {
+      display: block;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .visualization-step .step-state {
+      color: var(--weak);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .visualization-step.active {
+      border-color: rgba(16, 94, 255, 0.26);
+      background: rgba(16, 94, 255, 0.07);
+    }
+
+    .visualization-step.active .step-dot {
+      background: #2d3a67;
+      color: #fff;
+    }
+
+    .visualization-step.done .step-dot {
+      background: rgba(0, 171, 97, 0.12);
+      color: var(--green);
+    }
+
+    .visualization-step.done .step-state {
+      color: var(--green);
+    }
+
     /* ====== 账户管家 · 对话式入口 ====== */
     .acct-chat {
       padding: 4px 2px 2px;
@@ -4416,7 +4691,7 @@
       color: var(--navy);
       font-size: 15px;
       font-weight: 500;
-      text-align: center;
+      text-align: justify;
     }
 
     .dialog-placeholder {
@@ -6341,7 +6616,7 @@
 
     .buy-btn,
     .sell-btn {
-      height: 48px;
+      height: 38px;
       border-radius: 24px;
       color: #fff;
       font-size: 15px;
@@ -6370,7 +6645,7 @@
       gap: 22px;
       margin-bottom: 18px;
       color: #798397;
-      font-size: 17px;
+      font-size: 15px;
       font-weight: 600;
     }
 
@@ -6475,7 +6750,7 @@
     }
 
     .batch-actions button {
-      height: 48px;
+      height: 38px;
       border-radius: 24px;
       background: #eef4ff;
       color: #3d4654;
@@ -6543,7 +6818,7 @@
         <button data-state-button="trader">交易员Agent</button>
         <button data-state-button="morning">早点听Agent</button>
         <button data-state-button="agentCustom">agent定制</button>
-        <button data-state-button="addAgent">添加agent</button>
+        <button data-state-button="createAgent">创建Agent</button>
         <button class="mode-toggle" id="modeToggle">切换暗色模式</button>
       </div>
 
@@ -6636,11 +6911,9 @@
             <div class="agent-label">AI交易员</div><span class="agent-status">工作中</span><span
               class="agent-work-bubble">黄金ETF保护计划待确认</span>
           </div>
-          <div class="agent add" data-agent="addAgent">
-            <div class="avatar-pad">
-              <div class="add-symbol">+</div>
-            </div>
-            <div class="agent-label">添加Agent</div><span class="agent-status">休息中</span>
+          <div class="agent create-agent" data-agent="createAgent" role="button" aria-label="创建自己的 Agent">
+            <div class="avatar-pad"><span class="plus-icon" aria-hidden="true"></span></div>
+            <div class="agent-label">创建Agent</div>
           </div>
           <div class="agent t0-agent" data-agent="t0">
             <div class="avatar-pad">
@@ -6836,8 +7109,8 @@
               <div>
                 <div class="order-field muted"><span>−</span><b
                     style="color:var(--ink);font-size:15px;">1554.97</b><span>＋</span></div>
-                <div class="quote-line"><span class="down">1552.21</span><span
-                    style="display:inline-flex;align-items:center;gap:2px;">买上限/卖下限 <svg width="12" height="12"
+                <div class="quote-line" style="grid-template-columns: 1fr auto 1fr; gap: 4px;"><span class="down">1552.21</span><span
+                    style="width:max-content; display:inline-flex;align-items:center;gap:2px;white-space:nowrap;">买上限/卖下限<svg width="12" height="12"
                       viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path
                         d="M8 1.5C4.41015 1.5 1.5 4.41015 1.5 8C1.5 11.5899 4.41015 14.5 8 14.5C11.5899 14.5 14.5 11.5899 14.5 8C14.5 4.41015 11.5899 1.5 8 1.5ZM8 10.75C7.58579 10.75 7.25 11.0858 7.25 11.5C7.25 11.9142 7.58579 12.25 8 12.25C8.41421 12.25 8.75 11.9142 8.75 11.5C8.75 11.0858 8.41421 10.75 8 10.75ZM6.5 6.25C6.5 5.42157 7.17157 4.75 8 4.75C8.82843 4.75 9.5 5.42157 9.5 6.25C9.5 6.94582 9.04357 7.53488 8.40119 7.70617L8.38072 7.71162C8.04306 7.80164 7.75 8.09341 7.75 8.5C7.75 8.91421 8.08579 9.25 8.5 9.25C9.43123 9.25 10.1585 8.59012 10.5186 7.84666C10.8258 7.21235 11 6.55167 11 6.25C11 4.59315 9.65685 3.25 8 3.25C6.34315 3.25 5 4.59315 5 6.25C5 6.66421 5.33579 7 5.75 7C6.16421 7 6.5 6.66421 6.5 6.25Z"
@@ -6946,6 +7219,8 @@
     let currentAgent = "account";
     let agentCustomTimer = null;
     let accountTimer = null;
+    let addAgentTimer = null;
+    let createAgentTimer = null;
     let currentAddAgentStep = 1;
     let morningLastUserText = "";
     let trd = { plan: false, confirmed: false, tasks: false };
@@ -7009,6 +7284,7 @@
       agentCustom: "trader",
       morning: "morning",
       addAgent: "addAgent",
+      createAgent: "createAgent",
       trade: "trader"
     };
 
@@ -7057,6 +7333,11 @@
         ["添加 Agent", "通过自然语言创建一个新的金融 Agent，而不是让用户填写复杂表单。"],
         ["创建结果", "上方展示 Agent 的目标、可调用 skill、提示词约束和创建后的入口形态。"],
         ["对话流程", "下方展示 Yomi 如何追问服务目标、技能选择、风险边界，并让用户确认创建。"]
+      ],
+      createAgent: [
+        ["创建自己的 Agent", "先用一句话说明希望它长期完成什么，再由 Yomi 推荐能力和工作边界。"],
+        ["生成预览", "创建前展示 Agent 名称、职责、运行节奏和动作边界。"],
+        ["确认创建", "生成完成后由用户确认是否创建并固定到顶部入口。"]
       ]
     };
 
@@ -7751,6 +8032,60 @@
           <div class="assistant-reply">我会低打扰监控你的持仓股。当前华大智造进入价差观察区，是否需要我生成一版可确认的 T0 交易方案？</div>
         `
       },
+      createAgent: {
+        title: "创建自己的 Agent",
+        lead: "先用一句话说明你希望它长期帮你完成什么，再由 Yomi 推荐需要的能力和工作边界，最后生成可确认的 Agent 预览。",
+        prompt: "创建前会先生成预览，不会直接启用或接管任何交易动作。",
+        action: "开始生成专属 Agent",
+        command: "/ 创建一个每天下午复盘持仓的 Agent",
+        avatar: "",
+        name: "创建Agent",
+        executeTitle: "创建自己的 Agent",
+        executeLead: "用一句话说明它要帮你做什么，Yomi 会把目标拆成能力、数据来源和确认动作。",
+        executeAnswer: "你可以创建一个专门服务自己的 Agent，例如持仓复盘、事件盯盘、条件单检查或盘前播报。",
+        grid: `
+          <div class="create-agent-flow">
+            <div class="create-step">
+              <h3>1. 描述目标</h3>
+              <p>告诉它何时工作、关注什么、输出什么结论。</p>
+              <div class="create-input">帮我创建一个“波段复盘 Agent”，每天收盘后检查持仓是否偏离计划，并提示需要确认的动作。</div>
+            </div>
+            <div class="create-step">
+              <h3>2. 选择能力</h3>
+              <p>Yomi 根据目标推荐 Agent 需要使用的能力，你可以删减或补充。</p>
+              <div class="create-tags"><span>读取持仓</span><span>行情复盘</span><span>风险提醒</span><span>动作确认</span></div>
+            </div>
+            <div class="create-step">
+              <h3>3. 生成预览</h3>
+              <p>展示 Agent 名称、职责、运行节奏和动作边界，确认后才固定到顶部入口。</p>
+            </div>
+          </div>
+        `,
+        board: `
+          <div class="create-agent-flow">
+            <div class="create-step">
+              <h3>Agent 目标</h3>
+              <div class="create-input">每天收盘后复盘我的持仓，检查是否触发止盈、止损、仓位过重或计划偏离。</div>
+            </div>
+            <div class="create-step">
+              <h3>能力配置</h3>
+              <div class="create-tags"><span>读取持仓</span><span>读取自选</span><span>行情复盘</span><span>动作需确认</span></div>
+              <div class="create-preview">
+                <div class="create-avatar">波</div>
+                <div><b>波段复盘 Agent</b><small>每天 15:10 生成复盘卡，只提示计划偏离和需要确认的操作。</small></div>
+              </div>
+            </div>
+          </div>
+        `,
+        chat: `
+          <div class="agent-confirm">/ 创建一个每天下午复盘持仓的 Agent</div>
+          <div class="assistant-head">
+            <img src="./assets/avatars/yomi.png" alt="Yomi" />
+            <div class="assistant-name">Yomi</div>
+          </div>
+          <div class="assistant-reply">我会先生成一个“波段复盘 Agent”的草案。它只能给出复盘和提醒，涉及交易动作时必须由你确认。</div>
+        `
+      },
       addAgent: {
         title: "添加 Agent · 通过对话创建新服务",
         lead: "Yomi 会先理解你想新增的金融服务，再帮你选择 skill、设定提示词约束，最后生成一个可放到顶部入口里的 Agent。",
@@ -8008,9 +8343,132 @@
       }, 650);
     }
 
+    function addAgentLead(step) {
+      return {
+        1: "先描述希望 Agent 长期完成的目标。示例将创建一个只服务持仓的 T0 助手。",
+        2: "Yomi 已理解目标，并推荐了完成任务所需的能力与交易边界。",
+        3: "正在将目标、能力和风险边界编排成可确认的 Agent 草案。",
+        4: "Agent 草案已生成。确认后才会创建，并固定到顶部入口。",
+        5: "T0助手已创建并固定到顶部，可随时进入或通过一句话唤起。"
+      }[step] || "";
+    }
+
+    function addAgentProgress(step) {
+      const activeCount = Math.min(step, 4);
+      return `<div class="builder-progress">${[1, 2, 3, 4].map((item) => `<span class="${item <= activeCount ? "active" : ""}"></span>`).join("")}</div>`;
+    }
+
+    function addAgentSkills() {
+      return `
+        <div class="skill-grid">
+          <div class="skill-pill"><span class="skill-dot">1</span>分时异动识别</div>
+          <div class="skill-pill"><span class="skill-dot">2</span>持仓成本分析</div>
+          <div class="skill-pill"><span class="skill-dot">3</span>T0 价差测算</div>
+          <div class="skill-pill"><span class="skill-dot">4</span>交易风险校验</div>
+        </div>
+      `;
+    }
+
+    function addAgentBoard(step) {
+      if (step === 1) {
+        return `
+          ${addAgentProgress(step)}
+          <div class="builder-hero">
+            <h3>1. 描述目标</h3>
+            <p class="builder-copy">用一句话告诉 Yomi：Agent 何时工作、关注什么、输出什么。</p>
+            <div class="agent-confirm">帮我创建一个 T0 助手，只盯我的持仓股，发现盘中价差机会时给出可确认的操作建议。</div>
+          </div>
+        `;
+      }
+      if (step === 2) {
+        return `
+          ${addAgentProgress(step)}
+          <div class="builder-hero">
+            <h3>2. 选择能力与边界</h3>
+            <p class="builder-copy">Yomi 根据目标推荐以下能力。所有交易动作默认只生成方案，不自动下单。</p>
+            ${addAgentSkills()}
+          </div>
+          <div class="builder-card">
+            <h3>默认工作边界</h3>
+            <div class="constraint-list">
+              <div>只分析我的持仓股，不主动推荐陌生股票。</div>
+              <div>仅在价差空间与风险校验同时满足时提醒。</div>
+              <div>每次建议必须给出理由、价差空间和失败条件。</div>
+              <div>不自动下单，所有交易动作必须由用户确认。</div>
+            </div>
+          </div>
+        `;
+      }
+      if (step === 3) {
+        return `
+          ${addAgentProgress(step)}
+          <div class="builder-hero">
+            <h3>3. 生成专属 Agent</h3>
+            <p class="builder-copy">Yomi 正在把目标拆成可运行、可确认的 Agent 工作流。</p>
+            <div class="builder-generation">
+              <div class="builder-generation-item done"><span class="skill-dot">1</span><div><b>理解目标</b><small>只盯持仓，识别盘中价差机会。</small></div><span class="builder-generation-state">完成</span></div>
+              <div class="builder-generation-item active"><span class="skill-dot">2</span><div><b>编排能力</b><small>组合行情、持仓成本、价差和风险校验。</small></div><span class="builder-generation-state">生成中</span></div>
+              <div class="builder-generation-item"><span class="skill-dot">3</span><div><b>生成预览</b><small>输出职责、运行节奏和动作边界。</small></div><span class="builder-generation-state">等待</span></div>
+            </div>
+          </div>
+        `;
+      }
+      if (step === 4) {
+        return `
+          ${addAgentProgress(step)}
+          <div class="builder-hero">
+            <h3>T0助手 · 创建预览</h3>
+            <p class="builder-copy">盘中低打扰监控持仓股，在出现明确价差机会时生成可确认的 T0 方案。</p>
+            <div class="builder-steps">
+              <div class="builder-step"><span>1</span><div><b>运行节奏</b><br>交易时段持续监控，仅满足阈值时提醒。</div></div>
+              <div class="builder-step"><span>2</span><div><b>能力组合</b><br>分时异动、持仓成本、T0 价差、交易风险校验。</div></div>
+              <div class="builder-step"><span>3</span><div><b>动作边界</b><br>不自动下单，只生成有理由与失败条件的确认方案。</div></div>
+              <div class="builder-step"><span>4</span><div><b>发布方式</b><br>确认创建后固定到顶部 Agent 区。</div></div>
+            </div>
+          </div>
+          <div class="builder-card">
+            <h3>已编排能力</h3>
+            ${addAgentSkills()}
+          </div>
+        `;
+      }
+      return `
+        ${addAgentProgress(step)}
+        <div class="agent-created">
+          <div class="created-title">T0助手 已创建<span>已固定到顶部</span></div>
+          <p class="builder-copy" style="margin-top:8px;">之后可以直接点击顶部入口，或说“让 T0助手看一下今天能不能做价差”。</p>
+        </div>
+        ${agentViews.t0.board}
+      `;
+    }
+
+    function addAgentChat(step) {
+      const intro = `
+        <div class="assistant-head">
+          <img src="./assets/avatars/yomi.png" alt="Yomi" />
+          <div class="assistant-name">Yomi</div>
+        </div>
+      `;
+      if (step === 1) {
+        return `${intro}<div class="assistant-reply">你想创建一个什么类型的 Agent？先告诉我目标，我会推荐能力和安全边界。<div class="builder-options"><button data-add-step="2" class="primary">使用示例目标</button></div></div>`;
+      }
+      if (step === 2) {
+        return `<div class="agent-confirm">只盯我的持仓股，发现盘中价差机会时提醒我。</div>${intro}<div class="assistant-reply">目标已理解。我推荐 4 项能力，并默认关闭自动下单。你可以先确认这组配置。<div class="builder-action-row"><button data-add-step="1">返回修改目标</button><button data-add-step="3" class="primary">开始生成专属 Agent</button></div></div>`;
+      }
+      if (step === 3) {
+        return `<div class="agent-confirm">开始生成专属 Agent</div>${intro}<div class="assistant-reply">正在生成可视化草案。我会先标出它能做什么、不能做什么，以及哪些动作必须由你确认。</div>`;
+      }
+      if (step === 4) {
+        return `${intro}<div class="assistant-reply">草案已生成。确认后我会创建 T0助手，并把它固定到顶部 Agent 入口。<div class="builder-action-row"><button data-add-step="2">返回调整</button><button data-add-step="5" class="primary">确认创建并固定入口</button></div></div>`;
+      }
+      return `${intro}<div class="assistant-reply">已创建 <b>T0助手</b>。它不会自动下单，后续可继续调整提醒阈值和运行边界。<div class="builder-options"><button data-open-t0 class="primary">进入 T0助手</button></div></div>`;
+    }
+
     function renderAgent(agent) {
       clearTimeout(agentCustomTimer);
       clearTimeout(accountTimer);
+      clearTimeout(addAgentTimer);
+      clearTimeout(createAgentTimer);
       const view = agentViews[agent] || agentViews.account;
       switchTitle.textContent = view.title;
       switchLead.textContent = view.lead;
@@ -8023,6 +8481,13 @@
       executeLead.style.display = (agent === "addAgent" || view.executeLead) ? "" : "none";
       if (agent === "addAgent") {
         executeBoard.innerHTML = addAgentBoard(currentAddAgentStep);
+        if (currentAddAgentStep === 3) {
+          addAgentTimer = setTimeout(() => {
+            currentAddAgentStep = 4;
+            renderAgent("addAgent");
+            scrollAgentChatToBottom();
+          }, 1600);
+        }
       } else if (agent === "account") {
         executeBoard.innerHTML = accountGreeting;
         wireAccountChips();
@@ -8114,6 +8579,11 @@
         setState("agent", "morning");
         return;
       }
+      if (agent === "createAgent") {
+        currentAgent = "createAgent";
+        setState("switch", "createAgent");
+        return;
+      }
       if (agent === "addAgent") {
         currentAgent = "addAgent";
         currentAddAgentStep = 1;
@@ -8151,6 +8621,11 @@
         if (target === "agentCustom") {
           currentAgent = "traderCustom";
           setState("agent", "agentCustom");
+          return;
+        }
+        if (target === "createAgent") {
+          currentAgent = "createAgent";
+          setState("switch", "createAgent");
           return;
         }
         if (target === "addAgent") {
@@ -8194,6 +8669,60 @@
     });
 
     runAgent.addEventListener("click", () => {
+      if (currentAgent === "createAgent") {
+        clearTimeout(createAgentTimer);
+        setState("agent", "createAgent");
+        executeLead.textContent = "正在把你的目标转成 Agent 结构：目标、能力、边界和预览卡。";
+        executeBoard.innerHTML = `
+          <div class="create-agent-flow">
+            <div class="create-step">
+              <h3>生成专属 Agent</h3>
+              <p>Yomi 正在把一句目标拆成可以确认的 Agent 工作流。</p>
+              <div class="visualization-steps">
+                <div class="visualization-step done"><span class="step-dot">1</span><div><b>理解目标</b>收盘后复盘持仓，发现计划偏离和风险动作。</div><span class="step-state">完成</span></div>
+                <div class="visualization-step active"><span class="step-dot">2</span><div><b>编排能力</b>匹配持仓读取、行情复盘、风险提醒和动作确认。</div><span class="step-state">生成中</span></div>
+                <div class="visualization-step"><span class="step-dot">3</span><div><b>生成预览</b>输出名称、运行节奏和启用前确认项。</div><span class="step-state">等待</span></div>
+              </div>
+            </div>
+          </div>
+        `;
+        agentScroll.innerHTML = `
+          <div class="assistant-head">
+            <img src="./assets/avatars/yomi.png" alt="Yomi" />
+            <div class="assistant-name">Yomi</div>
+          </div>
+          <div class="assistant-reply">我正在生成可视化草案，会先标出这个 Agent 能做什么、不能做什么，以及哪些交易动作必须由你确认。</div>
+        `;
+        createAgentTimer = setTimeout(() => {
+          executeLead.textContent = "已生成 Agent 草案，确认后可以固定到顶部入口。";
+          executeBoard.innerHTML = `
+            <div class="create-agent-flow">
+              <div class="create-step">
+                <h3>已生成草案</h3>
+                <div class="visualization-steps">
+                  <div class="visualization-step done"><span class="step-dot">1</span><div><b>理解目标</b>收盘后复盘持仓，发现计划偏离和风险动作。</div><span class="step-state">完成</span></div>
+                  <div class="visualization-step done"><span class="step-dot">2</span><div><b>编排能力</b>读取持仓、行情复盘、风险提醒、动作确认。</div><span class="step-state">完成</span></div>
+                  <div class="visualization-step done"><span class="step-dot">3</span><div><b>生成预览</b>已生成名称、节奏和边界。</div><span class="step-state">完成</span></div>
+                </div>
+                <div class="create-preview">
+                  <div class="create-avatar">波</div>
+                  <div><b>波段复盘 Agent</b><small>每天收盘后检查持仓计划偏离、止盈止损触发和仓位集中度。</small></div>
+                </div>
+                <div class="create-tags"><span>15:10 运行</span><span>只读账户</span><span>不自动下单</span><span>动作需确认</span></div>
+              </div>
+              <button class="save-default">确认创建并固定入口</button>
+            </div>
+          `;
+          agentScroll.innerHTML = `
+            <div class="assistant-head">
+              <img src="./assets/avatars/yomi.png" alt="Yomi" />
+              <div class="assistant-name">Yomi</div>
+            </div>
+            <div class="assistant-reply">草案已生成。你可以继续补充规则，例如“只提醒亏损超过 3% 的持仓”，确认后我再把它放到顶部 Agent 入口。</div>
+          `;
+        }, 1600);
+        return;
+      }
       currentAgent = "trader";
       setState("agent", "trader");
     });
@@ -8218,10 +8747,16 @@
       }
     });
     agentScroll.addEventListener("click", (event) => {
+      const openT0 = event.target.closest("[data-open-t0]");
+      if (openT0) {
+        currentAgent = "t0";
+        setState("agent", "t0");
+        return;
+      }
       const nextButton = event.target.closest("[data-add-step]");
       if (!nextButton) return;
       currentAddAgentStep = Number(nextButton.dataset.addStep);
-      if (currentAddAgentStep >= 4) phone.classList.add("t0-created");
+      if (currentAddAgentStep >= 5) phone.classList.add("t0-created");
       renderAgent("addAgent");
       scrollAgentChatToBottom();
     });
