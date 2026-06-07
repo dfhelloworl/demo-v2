@@ -1357,8 +1357,8 @@
     .agent-card {
       border-radius: 18px;
       padding: 18px;
-      background: var(--surface-strong);
-      box-shadow: var(--shadow);
+      /* background: var(--surface-strong); */
+      /* box-shadow: var(--shadow); */
     }
 
     .agent-card h2 {
@@ -6013,27 +6013,8 @@
       margin: 0;
     }
 
-    .phone[data-nav="morning"] .work-area {
-      bottom: 82px;
-    }
-
-    .phone[data-nav="morning"] .bottom-bar {
-      height: 82px;
-      padding-top: 5px;
-      background: linear-gradient(180deg, rgba(238, 245, 255, 0), rgba(238, 245, 255, .95) 28%, rgba(238, 245, 255, 1));
-    }
-
     .phone[data-nav="morning"] .agent-input-dock {
       position: relative;
-      display: grid;
-      grid-template-columns: 1fr 36px 36px;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 8px 6px 14px;
-      border-radius: 999px;
-      border-color: rgba(16, 94, 255, .16);
-      background: rgba(255, 255, 255, .94);
-      box-shadow: 0 12px 28px rgba(45, 58, 103, .12);
     }
 
     .phone[data-nav="morning"] .agent-input-dock.morning-cta-hint {
@@ -6071,90 +6052,12 @@
     }
 
     .phone[data-nav="morning"] .trade-input {
-      min-height: 38px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      border: 0;
-      border-radius: 0;
-      background: transparent;
-      color: #1d2850;
       cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .phone[data-nav="morning"] .trade-input::before {
-      content: "♩";
-      display: grid;
-      place-items: center;
-      width: 18px;
-      height: 18px;
-      color: #1d2850;
-      font-size: 17px;
-      transform: rotate(180deg);
     }
 
     .phone[data-nav="morning"] .trade-input.recording {
       color: #d94a58;
       animation: voicePulse 1s ease-in-out infinite;
-    }
-
-    .phone[data-nav="morning"] .trade-actions {
-      display: contents;
-    }
-
-    .phone[data-nav="morning"] .trade-icon {
-      display: none;
-    }
-
-    .phone[data-nav="morning"] .trade-toggle {
-      grid-column: 2;
-      justify-self: center;
-      width: 36px;
-      height: 36px;
-      display: grid;
-      place-items: center;
-      border-radius: 50%;
-      background: #fff;
-      color: #23305f;
-      box-shadow: 0 5px 14px rgba(45, 58, 103, .12);
-      font-size: 0;
-    }
-
-    .phone[data-nav="morning"] .trade-toggle::before {
-      content: "⌨";
-      font-size: 16px;
-    }
-
-    .phone[data-nav="morning"] .toggle-pill {
-      display: none;
-    }
-
-    .phone[data-nav="morning"] .trade-send {
-      grid-column: 3;
-      width: 36px;
-      height: 36px;
-      background: #fff;
-      color: #23305f;
-      box-shadow: 0 5px 14px rgba(45, 58, 103, .12);
-      font-size: 0;
-    }
-
-    .phone[data-nav="morning"] .trade-send::before {
-      content: "+";
-      font-size: 25px;
-      font-weight: 300;
-    }
-
-    body.dark .phone[data-nav="morning"] .agent-input-dock {
-      background: rgba(24, 24, 27, .94);
-    }
-
-    body.dark .phone[data-nav="morning"] .trade-input,
-    body.dark .phone[data-nav="morning"] .trade-input::before {
-      color: rgba(255, 255, 255, .9);
     }
 
     @keyframes voicePulse {
@@ -6716,12 +6619,12 @@
         <section class="agent-bar" aria-label="Agent 入口">
           <div class="agent yomi active" data-agent="yomi">
             <div class="avatar-pad"><img class="avatar" src="./assets/avatars/yomi.png" alt="Yomi" /></div>
-            <div class="agent-label">Yomi看</div><span class="agent-status">工作中</span><span
+            <div class="agent-label">Yomi看</div><span class="agent-status">休息中</span><span
               class="agent-work-bubble">正在为你生成默认工作台</span>
           </div>
           <div class="agent" data-agent="morning">
             <div class="avatar-pad"><img class="avatar" src="./assets/avatars/morning.png" alt="早点听" /></div>
-            <div class="agent-label">早点听</div><span class="agent-status">工作中</span>
+            <div class="agent-label">早点听</div><span class="agent-status">休息中</span>
           </div>
           <div class="agent" data-agent="account">
             <div class="avatar-pad"><img class="avatar" src="./assets/avatars/event.png" alt="账户管家" /></div>
@@ -7047,6 +6950,24 @@
     let morningLastUserText = "";
     let trd = { plan: false, confirmed: false, tasks: false };
 
+    function renderAgentGenerating({ avatar, name, userText, activity, onReady }) {
+      clearTimeout(accountTimer);
+      const safeUserText = escapeMessage(userText);
+      executeBoard.innerHTML = `
+        <div class="morning-dialog-state answered">
+          <div class="morning-user-message">${safeUserText}</div>
+          <div class="assistant-head">
+            <img src="${avatar}" alt="${name}" />
+            <div class="assistant-name">${name}</div>
+          </div>
+          <div class="morning-chat-meta"><span>深度思考</span><span>${activity}<i class='chevron-down'></i></span></div>
+          <div class="assistant-reply">收到，我正在结合你的账户信息和最新市场情况生成内容...</div>
+        </div>
+      `;
+      executeBoard.scrollIntoView({ behavior: "smooth", block: "start" });
+      accountTimer = setTimeout(onReady, 700);
+    }
+
     function renderTrader() {
       const ub = (t) => '<div class="acct-userbubble trd"><span>' + t + '</span></div>';
       const rh = (m) => '<div class="acct-replyhead"><img src="./assets/avatars/limit.png" alt="AI交易员" /><b>AI交易员</b><small>' + m + '</small></div>';
@@ -7066,14 +6987,16 @@
       executeBoard.querySelectorAll("[data-acct-analyze]").forEach((chip) => {
         chip.addEventListener("click", () => {
           const said = label[chip.textContent.trim()] || chip.textContent.trim();
-          executeBoard.innerHTML =
-            accountGreeting +
-            '<div class="acct-userbubble"><span>' + said + '</span></div>' +
-            '<div class="acct-replyhead"><img src="./assets/avatars/event.png" alt="账户管家" /><b>账户管家</b><small>已为你体检完毕 · 14:32</small></div>' +
-            '<div class="acct-report">' + accountDemoResult + '</div>';
-          wireAccountChips();
-          const report = executeBoard.querySelector(".acct-report");
-          if (report) report.scrollTop;
+          renderAgentGenerating({
+            avatar: "./assets/avatars/event.png",
+            name: "账户管家",
+            userText: said,
+            activity: "正在进行账户体检与风险归因",
+            onReady: () => {
+              executeBoard.innerHTML = accountDemoResult;
+              executeBoard.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+          });
         });
       });
     }
@@ -7112,8 +7035,8 @@
       ],
       account: [
         ["账户管家 Agent", "顶部选中账户管家，表示进入专业账户体检服务。"],
-        ["结果区", "上方 85% 是账户管家的结果区，内部可滑动，展示一句话判断、账户健康、风险热力和归因。"],
-        ["对话区", "下方是独立对话区。当前状态表示用户还没发起对话，所以只保留空间和底部推荐指令。"]
+        ["选择式对话", "账户管家先结合账户和市场情况发起询问，用户选择分析账户、下跌原因或风险方向。"],
+        ["结果替换", "选择后先显示生成状态，再由账户诊断报告直接替换原对话，不在下方继续追加。"]
       ],
       trader: [
         ["AI交易员 Agent", "顶部选中 AI交易员，进入交易员自己的计划、动作和跟随服务。"],
@@ -7178,23 +7101,22 @@
       </div>
     `;
 
-    const accountThinking = `
-      <div class="acct-chat">
-        <div class="acct-think"><span>正在读取你的账户和今天的市场情况</span><span class="dots"><i></i><i></i><i></i></span></div>
-      </div>
-    `;
-
     const accountGreeting = `
-      <div class="acct-chat">
-        <div class="acct-greet">
-          <div class="gh"><img src="./assets/avatars/event.png" alt="账户管家" /><b>账户管家</b></div>
-          <div class="think-row"><span class="tpill">深度思考</span><span class="tmeta">已读取账户和最新市场情况</span></div>
-          <p class="gsay">下午好，我看了下今天的<b>市场不太平</b>，你的<b>账户也波动较大</b>。<span class="ask">需要我帮你分析下账户情况吗？</span></p>
-          <div class="gchips">
-            <div class="gchip primary" data-acct-analyze>帮我分析账户</div>
-            <div class="gchip" data-acct-analyze>今天为什么跌</div>
-            <div class="gchip" data-acct-analyze>看看风险大不大</div>
-          </div>
+      <div class="morning-chat">
+        <div class="assistant-head">
+          <img src="./assets/avatars/event.png" alt="账户管家" />
+          <div class="assistant-name">账户管家</div>
+        </div>
+        <div class="morning-chat-meta"><span>深度思考</span><span>已读取账户和最新市场情况<i class='chevron-down'></i></span></div>
+        <div class="assistant-reply">
+          <p>下午好，我看了下今天的<strong>市场不太平</strong>，你的<strong>账户也波动较大</strong>。</p>
+          <p><strong>需要我帮你分析账户情况、下跌原因，还是优先检查风险？</strong></p>
+          <p>选择一个方向后，我会直接生成对应结果，并替换当前对话内容。</p>
+        </div>
+        <div class="morning-suggestions">
+          <button type="button" data-acct-analyze>帮我分析账户</button>
+          <button type="button" data-acct-analyze>今天为什么跌</button>
+          <button type="button" data-acct-analyze>看看风险大不大</button>
         </div>
       </div>
     `;
@@ -8102,11 +8024,8 @@
       if (agent === "addAgent") {
         executeBoard.innerHTML = addAgentBoard(currentAddAgentStep);
       } else if (agent === "account") {
-        executeBoard.innerHTML = accountThinking;
-        accountTimer = setTimeout(() => {
-          executeBoard.innerHTML = accountGreeting;
-          wireAccountChips();
-        }, 1400);
+        executeBoard.innerHTML = accountGreeting;
+        wireAccountChips();
       } else if (agent === "trader") {
         trd = { plan: false, confirmed: false, tasks: false };
         executeBoard.innerHTML = traderThinking;
