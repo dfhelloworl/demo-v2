@@ -1,0 +1,4229 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Yomi AI 涨乐关键状态原型</title>
+  <style>
+    @font-face {
+      font-family: "ZLCaiFuTi";
+      src: url("./assets/fonts/ZLCaiFuTi-Regular.ttf") format("truetype");
+      font-weight: 400;
+    }
+
+    :root {
+      --red: #f62f3f;
+      --green: #00ab61;
+      --blue: #105eff;
+      --ink: #101828;
+      --navy: #23305f;
+      --muted: #6d778b;
+      --weak: #9fabc4;
+      --page: #eef4ff;
+      --surface: rgba(255, 255, 255, 0.86);
+      --surface-strong: rgba(255, 255, 255, 0.96);
+      --line: rgba(109, 119, 139, 0.14);
+      --chip: rgba(255, 255, 255, 0.9);
+      --shadow: 0 16px 36px rgba(45, 58, 103, 0.12);
+      --phone-bg: linear-gradient(160deg, #b9d9ff 0%, #eaf3ff 42%, #eef5ff 100%);
+    }
+
+    body.dark {
+      --ink: #ffffff;
+      --navy: #d7e4ff;
+      --muted: rgba(255, 255, 255, 0.66);
+      --weak: rgba(255, 255, 255, 0.36);
+      --page: #07152f;
+      --surface: rgba(18, 30, 58, 0.88);
+      --surface-strong: rgba(23, 37, 70, 0.96);
+      --line: rgba(255, 255, 255, 0.12);
+      --chip: rgba(255, 255, 255, 0.12);
+      --shadow: 0 18px 44px rgba(0, 0, 0, 0.35);
+      --phone-bg: linear-gradient(160deg, #19315d 0%, #0c1b38 52%, #081329 100%);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 10%, rgba(16, 94, 255, 0.12), transparent 28%),
+        linear-gradient(145deg, #eef2f8, #ffffff);
+      font-family: "PingFang SC", "Helvetica Neue", sans-serif;
+      letter-spacing: 0;
+    }
+
+    body.dark {
+      background:
+        radial-gradient(circle at 18% 8%, rgba(59, 132, 255, 0.18), transparent 28%),
+        linear-gradient(145deg, #07101f, #10192c);
+    }
+
+    .studio {
+      display: grid;
+      grid-template-columns: minmax(300px, 360px) 1fr;
+      gap: 34px;
+      min-height: 100vh;
+      padding: 34px;
+      align-items: center;
+    }
+
+    .brief {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+    }
+
+    .eyebrow {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1.12;
+      font-weight: 500;
+    }
+
+    .brief p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    button {
+      border: 0;
+      min-height: 38px;
+      border-radius: 999px;
+      background: var(--chip);
+      color: var(--ink);
+      font: 400 13px/1 "PingFang SC", sans-serif;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(45, 58, 103, 0.08);
+    }
+
+    button.active {
+      background: #2d3a67;
+      color: #fff;
+    }
+
+    .mode-toggle {
+      grid-column: 1 / -1;
+    }
+
+    .principles {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .principle {
+      border-radius: 16px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.62);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    body.dark .principle {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .stage {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 844px;
+    }
+
+    .layout-note {
+      position: absolute;
+      width: 190px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.68);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      box-shadow: 0 14px 34px rgba(45, 58, 103, 0.1);
+      backdrop-filter: blur(18px);
+    }
+
+    body.dark .layout-note {
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .layout-note strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--navy);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .layout-note.top {
+      top: 68px;
+      left: calc(50% + 226px);
+    }
+
+    .layout-note.middle {
+      top: 330px;
+      left: calc(50% + 226px);
+    }
+
+    .layout-note.bottom {
+      bottom: 58px;
+      left: calc(50% + 226px);
+    }
+
+    .phone {
+      position: relative;
+      width: 390px;
+      height: 844px;
+      overflow: hidden;
+      border-radius: 34px;
+      background: var(--phone-bg);
+      box-shadow: 0 24px 80px rgba(19, 32, 58, 0.28);
+    }
+
+    .status-bar {
+      height: 47px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 24px 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: #000;
+    }
+
+    body.dark .status-bar { color: #fff; }
+
+    .ios-icons {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .signal {
+      width: 18px;
+      height: 12px;
+      display: grid;
+      grid-template-columns: repeat(4, 3px);
+      gap: 2px;
+      align-items: end;
+    }
+
+    .signal span {
+      display: block;
+      width: 3px;
+      border-radius: 2px;
+      background: currentColor;
+    }
+
+    .signal span:nth-child(1) { height: 4px; }
+    .signal span:nth-child(2) { height: 6px; }
+    .signal span:nth-child(3) { height: 9px; }
+    .signal span:nth-child(4) { height: 12px; }
+
+    .wifi {
+      width: 15px;
+      height: 11px;
+      border: 2px solid currentColor;
+      border-left-color: transparent;
+      border-bottom-color: transparent;
+      transform: rotate(-45deg);
+      border-radius: 50%;
+    }
+
+    .battery {
+      width: 24px;
+      height: 12px;
+      border: 1.5px solid currentColor;
+      border-radius: 3px;
+      position: relative;
+    }
+
+    .battery::before {
+      content: "";
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      width: 15px;
+      height: 6px;
+      border-radius: 1.5px;
+      background: currentColor;
+    }
+
+    .battery::after {
+      content: "";
+      position: absolute;
+      right: -4px;
+      top: 3px;
+      width: 2px;
+      height: 6px;
+      border-radius: 0 2px 2px 0;
+      background: currentColor;
+    }
+
+    .agent-bar {
+      height: 112px;
+      padding: 0 10px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      align-items: end;
+      overflow-x: hidden;
+      overflow-y: hidden;
+      scrollbar-width: none;
+    }
+
+    .agent-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .agent {
+      position: relative;
+      height: 104px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      cursor: pointer;
+    }
+
+    .agent.disabled {
+      cursor: default;
+      opacity: 0.52;
+    }
+
+    .agent.disabled .avatar {
+      filter: grayscale(0.18) drop-shadow(0 8px 10px rgba(45, 58, 103, 0.08));
+    }
+
+    .agent.disabled .agent-label {
+      color: rgba(35, 48, 95, 0.62);
+    }
+
+    .agent::after {
+      content: "";
+      position: absolute;
+      top: 18px;
+      right: 10px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.6);
+    }
+
+    .avatar-pad {
+      width: 82px;
+      height: 75px;
+      display: grid;
+      place-items: center;
+      border-radius: 24px 24px 14px 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.46), rgba(255,255,255,0.08));
+      box-shadow: inset 0 -14px 24px rgba(255,255,255,0.16);
+    }
+
+    .agent.add .avatar-pad {
+      background: rgba(255, 255, 255, 0.38);
+      border: 1px dashed rgba(35, 48, 95, 0.22);
+    }
+
+    .agent.t0-agent {
+      display: none;
+    }
+
+    .phone.t0-created .agent.t0-agent {
+      display: flex;
+    }
+
+    .phone.t0-created .agent.add {
+      display: none;
+    }
+
+    .add-symbol {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #243463;
+      background: rgba(255,255,255,0.84);
+      box-shadow: 0 10px 18px rgba(45, 58, 103, 0.12);
+      font-size: 30px;
+      font-weight: 300;
+      line-height: 1;
+    }
+
+    .t0-symbol {
+      width: 46px;
+      height: 46px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: linear-gradient(135deg, #2f66f6, #00ab61);
+      box-shadow: 0 12px 22px rgba(47, 102, 246, 0.24);
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .avatar {
+      width: 90px;
+      height: 75px;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 10px rgba(45, 58, 103, 0.13));
+      transition: transform 200ms ease;
+    }
+
+    .agent.yomi .avatar {
+      width: 82px;
+      height: 72px;
+    }
+
+    .agent-label {
+      max-width: 96px;
+      height: 25px;
+      margin-top: -2px;
+      padding: 1px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.9);
+      color: #23305f;
+      box-shadow: 0 8px 18px rgba(45, 58, 103, 0.08);
+      font-size: 10.5px;
+      line-height: 23px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .agent.active .avatar {
+      transform: translateY(-2px) scale(1.04);
+    }
+
+    .agent.yomi.active .avatar {
+      transform-origin: 68% 28%;
+      animation: yomiWave 1.8s ease-in-out infinite;
+    }
+
+    .agent:not(.yomi).active .avatar {
+      transform-origin: 52% 76%;
+      animation: agentTyping 1.15s ease-in-out infinite;
+    }
+
+    .agent.yomi.active::after {
+      content: "hi";
+      display: grid;
+      place-items: center;
+      background: rgba(45, 58, 103, 0.92);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 600;
+      animation: helloPop 1.8s ease-in-out infinite;
+    }
+
+    .agent:not(.yomi).active::after {
+      background:
+        radial-gradient(circle at 50% 50%, #2d3a67 0 2px, transparent 3px),
+        radial-gradient(circle at 26% 50%, #2d3a67 0 2px, transparent 3px),
+        radial-gradient(circle at 74% 50%, #2d3a67 0 2px, transparent 3px),
+        rgba(255, 255, 255, 0.9);
+      box-shadow: 0 6px 14px rgba(45, 58, 103, 0.14);
+      animation: typingBubble 1.15s ease-in-out infinite;
+    }
+
+    .agent.active .avatar-pad {
+      background: linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.2));
+      box-shadow:
+        0 0 0 2px rgba(45, 58, 103, 0.16),
+        inset 0 -14px 24px rgba(255,255,255,0.22),
+        0 12px 24px rgba(45, 58, 103, 0.16);
+    }
+
+    .agent.active .agent-label {
+      background: #2d3a67;
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(45, 58, 103, 0.18);
+    }
+
+    @keyframes yomiWave {
+      0%, 100% { transform: translateY(-2px) scale(1.04) rotate(0deg); }
+      18% { transform: translateY(-4px) scale(1.05) rotate(-4deg); }
+      36% { transform: translateY(-2px) scale(1.04) rotate(3deg); }
+      54% { transform: translateY(-3px) scale(1.05) rotate(-2deg); }
+      72% { transform: translateY(-2px) scale(1.04) rotate(0deg); }
+    }
+
+    @keyframes helloPop {
+      0%, 100% { opacity: 0; transform: translateY(4px) scale(0.55); }
+      18%, 62% { opacity: 1; transform: translateY(0) scale(1); }
+      76% { opacity: 0; transform: translateY(-4px) scale(0.88); }
+    }
+
+    @keyframes agentTyping {
+      0%, 100% { transform: translateY(-2px) scale(1.04) rotate(0deg); }
+      28% { transform: translateY(0) scale(1.03) rotate(-1.5deg); }
+      56% { transform: translateY(-4px) scale(1.045) rotate(1.5deg); }
+      78% { transform: translateY(-1px) scale(1.035) rotate(0deg); }
+    }
+
+    @keyframes typingBubble {
+      0%, 100% { opacity: 0.35; transform: translateY(2px) scale(0.72); }
+      34% { opacity: 1; transform: translateY(0) scale(1); }
+      68% { opacity: 0.72; transform: translateY(-2px) scale(0.9); }
+    }
+
+    .work-area {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 164px;
+      bottom: 89px;
+      padding: 0 12px 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .phone[data-state="switch"] .work-area,
+    .phone[data-state="agent"] .work-area {
+      bottom: 138px;
+    }
+
+    .phone[data-nav="agentCustom"] .work-area {
+      bottom: 92px;
+    }
+
+    .overlay {
+      position: relative;
+      height: 570px;
+      max-height: 570px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      cursor: default;
+      filter: drop-shadow(0 18px 28px rgba(45, 58, 103, 0.12));
+      transition: max-height 240ms ease, opacity 200ms ease;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .overlay::-webkit-scrollbar {
+      display: none;
+    }
+
+    .overlay-handle {
+      display: none;
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 17px;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(18px);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .overlay-collapse {
+      position: absolute;
+      z-index: 2;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70px;
+      height: 28px;
+      margin: 0;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(166, 172, 184, 0.36);
+      background: rgba(246, 250, 255, 0.82);
+      color: var(--muted);
+      font-size: 12px;
+      box-shadow: 0 8px 18px rgba(45, 58, 103, 0.12);
+      backdrop-filter: blur(12px);
+      cursor: pointer;
+    }
+
+    .phone.workbench-collapsed .overlay {
+      height: 34px;
+      max-height: 34px;
+      overflow: hidden;
+      filter: none;
+      cursor: pointer;
+    }
+
+    .phone.workbench-collapsed .overlay-image,
+    .phone.workbench-collapsed .workbench-svg,
+    .phone.workbench-collapsed .overlay-collapse {
+      display: none;
+    }
+
+    .phone.workbench-collapsed .overlay-handle {
+      display: flex;
+    }
+
+    .overlay-image {
+      width: 390px;
+      height: auto;
+      min-height: 570px;
+      margin: 0 -12px;
+      padding: 0;
+      display: block;
+    }
+
+    body.dark .overlay-image {
+      background: none;
+    }
+
+    .workbench-svg {
+      width: 390px;
+      height: auto;
+      min-height: 570px;
+      margin: 0 -12px;
+      display: block;
+    }
+
+    .workbench-signals {
+      display: none;
+    }
+
+    .phone.workbench-signals-state .overlay-image {
+      display: none;
+    }
+
+    .phone.workbench-signals-state .workbench-signals {
+      display: block;
+    }
+
+    .phone[data-state="chat"] .overlay,
+    .phone[data-state="custom"] .overlay,
+    .phone[data-state="agent"] .overlay {
+      max-height: 34px;
+      opacity: 0.9;
+    }
+
+    .phone[data-state="switch"] .overlay,
+    .phone[data-state="agent"] .overlay {
+      display: none;
+    }
+
+    .phone[data-state="chat"] .overlay-image,
+    .phone[data-state="custom"] .overlay-image,
+    .phone[data-state="agent"] .overlay-image {
+      display: none;
+    }
+
+    .phone[data-state="chat"] .overlay-handle,
+    .phone[data-state="custom"] .overlay-handle,
+    .phone[data-state="agent"] .overlay-handle {
+      display: flex;
+    }
+
+    .phone[data-state="chat"] .overlay-collapse,
+    .phone[data-state="custom"] .overlay-collapse,
+    .phone[data-state="agent"] .overlay-collapse {
+      display: none;
+    }
+
+    .phone.force-expanded .overlay {
+      max-height: 570px;
+      opacity: 1;
+    }
+
+    .phone.force-expanded .overlay-image {
+      display: block;
+    }
+
+    .phone.force-expanded .overlay-handle {
+      display: none;
+    }
+
+    .chat-panel,
+    .customize-panel {
+      display: none;
+      margin-top: 12px;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding-bottom: 20px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .agent-panel {
+      display: none;
+      margin-top: 12px;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      padding-bottom: 0;
+    }
+
+    .chat-panel::-webkit-scrollbar,
+    .customize-panel::-webkit-scrollbar {
+      display: none;
+    }
+
+    .phone[data-state="chat"] .chat-panel,
+    .phone[data-state="custom"] .customize-panel,
+    .phone[data-state="switch"] .agent-panel,
+    .phone[data-state="agent"] .agent-panel {
+      display: block;
+      animation: rise 240ms ease both;
+    }
+
+    .phone[data-state="agent"] .agent-panel {
+      display: flex;
+      flex-direction: column;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .bubble-question {
+      width: 300px;
+      margin-left: auto;
+      margin-bottom: 18px;
+      padding: 14px 18px;
+      border-radius: 16px 16px 4px 16px;
+      border: 1px solid rgba(16, 94, 255, 0.18);
+      background: rgba(255, 255, 255, 0.34);
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.5;
+      box-shadow: 0 10px 24px rgba(45, 58, 103, 0.06);
+    }
+
+    .assistant-head {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .assistant-head img {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .assistant-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    .tag-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0 14px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .think-tag {
+      height: 24px;
+      padding: 0 8px;
+      border-radius: 12px;
+      background: rgba(246, 47, 63, 0.08);
+      color: #b44b66;
+      line-height: 24px;
+    }
+
+    .answer {
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.75;
+    }
+
+    .answer h3 {
+      margin: 18px 0 8px;
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .agent-card {
+      border-radius: 18px;
+      padding: 18px;
+      background: var(--surface-strong);
+      box-shadow: var(--shadow);
+    }
+
+    .agent-card h2 {
+      margin: 0 0 12px;
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--navy);
+    }
+
+    .agent-card p {
+      margin: 0 0 14px;
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .agent-card.compact {
+      padding: 18px 18px 20px;
+    }
+
+    .phone[data-state="switch"] .execute-view,
+    .phone[data-state="agent"] .switch-view {
+      display: none;
+    }
+
+    .phone[data-state="agent"] .execute-view {
+      height: 100%;
+      min-height: 0;
+      display: block;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-bottom: 10px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .phone[data-state="agent"] .agent-card.compact {
+      min-height: 0;
+      padding: 16px 16px 14px;
+      overflow: visible;
+    }
+
+    .phone[data-state="agent"] .execute-view::-webkit-scrollbar {
+      display: none;
+    }
+
+    .agent-scroll {
+      min-height: 0;
+      margin-top: 8px;
+      overflow: visible;
+      padding-bottom: 0;
+    }
+
+    .sector-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 12px 0 18px;
+    }
+
+    .sector {
+      min-height: 66px;
+      position: relative;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      border: 1px solid rgba(246, 47, 63, 0.3);
+      background: rgba(246, 47, 63, 0.06);
+      color: var(--red);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .sector.hot::before {
+      content: "早盘抢筹";
+      position: absolute;
+      top: -12px;
+      right: 4px;
+      height: 18px;
+      padding: 0 6px;
+      border-radius: 4px;
+      background: #ff4a37;
+      color: #fff;
+      font-size: 10px;
+      line-height: 18px;
+    }
+
+    .sector.negative {
+      border-color: rgba(0, 171, 97, 0.3);
+      background: rgba(0, 171, 97, 0.06);
+      color: var(--green);
+    }
+
+    .cta {
+      width: 100%;
+      height: 46px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--navy);
+      text-align: left;
+      padding: 0 14px;
+      box-shadow: none;
+      border: 1px solid var(--line);
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .cta + .cta {
+      margin-top: 10px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .ranking-card {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .rank-column {
+      min-height: 210px;
+      border-radius: 8px;
+      padding: 10px;
+      border: 1px solid rgba(246, 47, 63, 0.2);
+      background: linear-gradient(180deg, rgba(246, 47, 63, 0.08), rgba(255,255,255,0.62));
+    }
+
+    .rank-column.out {
+      border-color: rgba(0, 171, 97, 0.22);
+      background: linear-gradient(180deg, rgba(0, 171, 97, 0.08), rgba(255,255,255,0.58));
+    }
+
+    body.dark .rank-column {
+      background: linear-gradient(180deg, rgba(246, 47, 63, 0.12), rgba(255,255,255,0.05));
+    }
+
+    body.dark .rank-column.out {
+      background: linear-gradient(180deg, rgba(0, 171, 97, 0.12), rgba(255,255,255,0.05));
+    }
+
+    .rank-title {
+      margin-bottom: 8px;
+      color: var(--red);
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .rank-column.out .rank-title {
+      color: var(--green);
+    }
+
+    .rank-main {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      gap: 6px;
+      align-items: start;
+      margin-bottom: 10px;
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .rank-badge {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--red);
+      color: #fff;
+      font-size: 11px;
+    }
+
+    .rank-column.out .rank-badge {
+      background: var(--green);
+    }
+
+    .rank-note {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 400;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .rank-percent {
+      height: 30px;
+      margin: 8px 0 10px;
+      padding: 0 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: 4px;
+      background: rgba(246, 47, 63, 0.08);
+      color: var(--red);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .rank-column.out .rank-percent {
+      background: rgba(0, 171, 97, 0.08);
+      color: var(--green);
+    }
+
+    .rank-meta {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      row-gap: 5px;
+      color: var(--ink);
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .rank-meta span:nth-child(odd) {
+      color: var(--muted);
+    }
+
+    .rank-more {
+      grid-column: 1 / -1;
+      margin-top: 8px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .service-grid {
+      display: grid;
+      gap: 10px;
+      margin: 12px 0 16px;
+    }
+
+    .service-card {
+      border-radius: 14px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.66);
+    }
+
+    body.dark .service-card {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .service-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .service-head h3 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .service-state {
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 11px;
+      background: rgba(16, 94, 255, 0.08);
+      color: var(--blue);
+      font-size: 11px;
+      line-height: 22px;
+      white-space: nowrap;
+    }
+
+    .service-copy {
+      margin: 0 0 10px;
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .service-metrics,
+    .trader-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .mini-metric {
+      min-height: 56px;
+      border-radius: 10px;
+      padding: 9px;
+      background: rgba(241, 246, 255, 0.74);
+    }
+
+    body.dark .mini-metric {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .mini-metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .mini-metric strong {
+      display: block;
+      margin-top: 4px;
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .mini-metric .red,
+    .trade-red {
+      color: var(--red);
+    }
+
+    .mini-metric .green,
+    .trade-green {
+      color: var(--green);
+    }
+
+    .service-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .service-tags span {
+      height: 24px;
+      padding: 0 8px;
+      border-radius: 12px;
+      background: rgba(23, 36, 78, 0.06);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 24px;
+    }
+
+    body.dark .service-tags span {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .trader-board {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .trader-status {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .trader-panel {
+      border-radius: 12px;
+      padding: 11px;
+      border: 1px solid rgba(16, 94, 255, 0.14);
+      background: rgba(255, 255, 255, 0.62);
+    }
+
+    body.dark .trader-panel {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .trader-panel h3 {
+      margin: 0 0 8px;
+      color: var(--navy);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .holding-row,
+    .activity-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 0;
+      border-top: 1px solid var(--line);
+      color: var(--ink);
+      font-size: 12px;
+    }
+
+    .holding-row:first-of-type,
+    .activity-row:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .holding-row small,
+    .activity-row small {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .t0-card {
+      border-radius: 16px;
+      padding: 14px;
+      background: var(--surface-strong);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .t0-card h3 {
+      margin: 0 0 8px;
+      color: var(--navy);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .t0-opportunity {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 0;
+      border-top: 1px solid var(--line);
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .t0-opportunity:first-of-type {
+      border-top: 0;
+    }
+
+    .t0-opportunity small {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.35;
+    }
+
+    .t0-opportunity strong {
+      color: var(--red);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .t0-plan-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .t0-plan-grid div {
+      min-height: 60px;
+      border-radius: 12px;
+      padding: 9px;
+      background: rgba(16, 94, 255, 0.06);
+      color: var(--ink);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .t0-plan-grid b {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--blue);
+      font-size: 13px;
+    }
+
+    .quick-commands {
+      margin-top: 14px;
+      border-radius: 16px;
+      background: var(--surface-strong);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .quick-command {
+      display: grid;
+      grid-template-columns: 18px 1fr 18px;
+      gap: 8px;
+      align-items: center;
+      min-height: 42px;
+      padding: 0 14px;
+      border-top: 1px solid var(--line);
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .quick-command:first-child {
+      border-top: 0;
+    }
+
+    .quick-command span:first-child,
+    .quick-command span:last-child {
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .quick-trade {
+      margin-top: 12px;
+      border-radius: 18px;
+      padding: 14px;
+      border: 1px solid rgba(16, 94, 255, 0.14);
+      background: var(--surface-strong);
+      box-shadow: var(--shadow);
+    }
+
+    .agent-input-dock {
+      display: none;
+      width: 354px;
+      margin: 0 auto;
+      border-radius: 18px;
+      padding: 11px 12px 10px;
+      border: 1px solid rgba(16, 94, 255, 0.12);
+      background: rgba(255, 255, 255, 0.86);
+      box-shadow: 0 16px 34px rgba(45, 58, 103, 0.12);
+      backdrop-filter: blur(16px);
+    }
+
+    body.dark .agent-input-dock {
+      background: rgba(24, 24, 27, 0.94);
+      border-color: rgba(255, 255, 255, 0.075);
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.34);
+    }
+
+    .phone[data-state="switch"] .bottom-bar,
+    .phone[data-state="agent"] .bottom-bar {
+      height: 138px;
+      padding-top: 10px;
+      background: linear-gradient(180deg, rgba(238, 245, 255, 0), rgba(238, 245, 255, 0.92) 22%, rgba(238, 245, 255, 1));
+    }
+
+    .phone[data-nav="agentCustom"] .bottom-bar {
+      height: 92px;
+      padding-top: 0;
+    }
+
+    body.dark .phone[data-state="switch"] .bottom-bar,
+    body.dark .phone[data-state="agent"] .bottom-bar {
+      background: linear-gradient(180deg, rgba(15, 18, 28, 0), rgba(15, 18, 28, 0.96) 22%, rgba(15, 18, 28, 1));
+    }
+
+    .phone[data-state="switch"] .agent-input-dock,
+    .phone[data-state="agent"] .agent-input-dock {
+      display: block;
+    }
+
+    .dock-command {
+      display: none;
+      width: 354px;
+      height: 30px;
+      margin: 0 auto 6px;
+      border-radius: 0;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 8px;
+      background: transparent;
+      border: 0;
+      border-bottom: 1px solid rgba(23, 36, 78, 0.08);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    body.dark .dock-command {
+      background: transparent;
+      border-color: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.48);
+    }
+
+    .phone[data-state="agent"] .dock-command {
+      display: flex;
+    }
+
+    .phone[data-nav="agentCustom"] .dock-command {
+      display: none;
+    }
+
+    .trade-input {
+      color: var(--muted);
+      font-size: 14px;
+      min-height: 27px;
+      line-height: 24px;
+    }
+
+    .trade-actions {
+      display: grid;
+      grid-template-columns: 34px 34px 1fr 34px;
+      align-items: center;
+      gap: 8px;
+      margin-top: 7px;
+    }
+
+    .trade-icon,
+    .trade-send {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(23, 36, 78, 0.06);
+      color: var(--navy);
+      font-size: 18px;
+    }
+
+    body.dark .trade-icon,
+    body.dark .trade-send {
+      background: rgba(255, 255, 255, 0.075);
+      color: rgba(255, 255, 255, 0.82);
+    }
+
+    body.dark .trade-input {
+      color: rgba(255, 255, 255, 0.46);
+    }
+
+    body.dark .trade-toggle {
+      color: rgba(255, 255, 255, 0.92);
+    }
+
+    body.dark .toggle-pill {
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    .trade-toggle {
+      justify-self: start;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .toggle-pill {
+      width: 36px;
+      height: 20px;
+      padding: 2px;
+      border-radius: 10px;
+      background: rgba(23, 36, 78, 0.12);
+    }
+
+    .toggle-pill::before {
+      content: "";
+      display: block;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(23, 36, 78, 0.2);
+    }
+
+    .account-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .account-action {
+      min-height: 66px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      gap: 3px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.7);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    body.dark .account-action {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .account-action small {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 400;
+    }
+
+    .health-grid,
+    .diagnosis-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .health-score {
+      min-height: 132px;
+      border-radius: 14px;
+      padding: 13px;
+      background: rgba(255, 255, 255, 0.68);
+      border: 1px solid var(--line);
+      text-align: center;
+    }
+
+    body.dark .health-score {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .score-arc {
+      width: 88px;
+      height: 46px;
+      margin: 10px auto 0;
+      border-radius: 88px 88px 0 0;
+      border: 9px solid rgba(16, 94, 255, 0.12);
+      border-bottom: 0;
+      box-shadow: inset 20px 0 0 rgba(0, 171, 97, 0.28), inset -22px 0 0 rgba(86, 104, 240, 0.35);
+    }
+
+    .score-num {
+      margin-top: -4px;
+      color: var(--ink);
+      font-size: 34px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .score-note {
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .heat-card {
+      min-height: 132px;
+      border-radius: 14px;
+      padding: 13px;
+      background: rgba(255, 255, 255, 0.68);
+      border: 1px solid var(--line);
+    }
+
+    body.dark .heat-card {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .heat-row {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 7px;
+      align-items: center;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .heat-cells {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+    }
+
+    .heat-cells span {
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    .diagnosis-card {
+      border-radius: 16px;
+      padding: 14px;
+      background: var(--surface-strong);
+      border: 1px solid var(--line);
+    }
+
+    .diagnosis-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      padding: 10px 0;
+      border-top: 1px solid var(--line);
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .diagnosis-row:first-of-type {
+      border-top: 0;
+      padding-top: 4px;
+    }
+
+    .advisor-card {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: 38px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border-radius: 16px;
+      padding: 12px;
+      border: 1px solid rgba(214, 158, 69, 0.38);
+      background: rgba(255, 248, 234, 0.78);
+    }
+
+    body.dark .advisor-card {
+      background: rgba(214, 158, 69, 0.12);
+    }
+
+    .advisor-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #c99a45;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .advisor-card b {
+      display: block;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .advisor-card small {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .advisor-cta {
+      height: 30px;
+      padding: 0 10px;
+      border-radius: 15px;
+      border: 1px solid rgba(214, 158, 69, 0.36);
+      color: #b47b21;
+      font-size: 12px;
+      line-height: 30px;
+      background: rgba(255,255,255,0.6);
+    }
+
+    .shock-card {
+      border-radius: 16px;
+      padding: 14px;
+      background: linear-gradient(145deg, rgba(255, 247, 238, 0.92), rgba(255, 255, 255, 0.82));
+      border: 1px solid rgba(226, 59, 59, 0.12);
+      box-shadow: var(--shadow);
+    }
+
+    body.dark .shock-card {
+      background: rgba(255, 255, 255, 0.055);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .shock-title,
+    .section-kicker {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--navy);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .shock-title span,
+    .section-kicker span {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .shock-card h3,
+    .impact-card h3,
+    .stock-impact-card h3,
+    .priority-card h3 {
+      margin: 8px 0 0;
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .event-chain {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .event-chain b {
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: rgba(16, 94, 255, 0.08);
+      color: var(--ink);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .shock-drop {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: center;
+      margin-top: 11px;
+      border-radius: 13px;
+      padding: 10px;
+      background: rgba(226, 59, 59, 0.08);
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .shock-drop strong {
+      color: var(--green);
+      font-size: 26px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .judge-copy {
+      margin-top: 10px;
+      color: var(--ink);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .impact-card,
+    .stock-impact-card,
+    .priority-card {
+      border-radius: 16px;
+      padding: 14px;
+      background: var(--surface-strong);
+      border: 1px solid var(--line);
+    }
+
+    .exposure-copy {
+      margin-top: 8px;
+      color: var(--ink);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .exposure-copy strong {
+      color: var(--red);
+    }
+
+    .exposure-bar {
+      position: relative;
+      height: 10px;
+      margin-top: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(116, 125, 148, 0.14);
+    }
+
+    .exposure-bar::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 86%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #ff7b7b, var(--red));
+    }
+
+    .exposure-legend {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .stock-impact {
+      margin-top: 10px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.54);
+    }
+
+    body.dark .stock-impact {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .stock-impact + .stock-impact {
+      margin-top: 8px;
+    }
+
+    .stock-impact-head {
+      display: grid;
+      grid-template-columns: 22px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 10px 6px;
+    }
+
+    .impact-rank {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(226, 59, 59, 0.1);
+      color: var(--red);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .stock-impact-name b {
+      display: block;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .stock-impact-name small,
+    .stock-impact-loss small {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .stock-impact-loss {
+      text-align: right;
+    }
+
+    .stock-impact-loss b {
+      color: var(--green);
+      font-size: 13px;
+    }
+
+    .stock-impact-path,
+    .risk-flag {
+      padding: 0 10px 10px;
+      color: var(--ink);
+      font-size: 11px;
+      line-height: 1.55;
+    }
+
+    .risk-flag {
+      margin: 0 10px 10px;
+      padding: 9px;
+      border-radius: 12px;
+      background: rgba(226, 59, 59, 0.08);
+      color: #7a2a22;
+    }
+
+    body.dark .risk-flag {
+      color: rgba(255, 210, 203, 0.9);
+    }
+
+    .risk-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      margin-top: 7px;
+    }
+
+    .risk-grid span {
+      border-radius: 9px;
+      padding: 6px 4px;
+      background: rgba(255, 255, 255, 0.64);
+      color: var(--ink);
+      font-size: 10px;
+      text-align: center;
+    }
+
+    body.dark .risk-grid span {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .priority-item {
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      gap: 8px;
+      padding: 10px 0;
+      border-top: 1px solid var(--line);
+      color: var(--ink);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .priority-item:first-of-type {
+      border-top: 0;
+      padding-top: 8px;
+    }
+
+    .account-demo {
+      --demo-ink: #1a1d24;
+      --demo-sub: #6b7280;
+      --demo-faint: #a4abb6;
+      --demo-line: rgba(20,24,29,.07);
+      --demo-yomi: #5b6cf0;
+      --demo-soft: #eef0ff;
+      --demo-up: #e23b3b;
+      --demo-down: #0f9d6e;
+      --demo-gold: #c79a4e;
+      --demo-amber: #e08a1e;
+      --demo-shadow: 0 1px 2px rgba(20,24,29,.04), 0 10px 28px rgba(20,24,29,.06);
+      --demo-radius: 22px;
+      margin: -2px -16px 0;
+      color: var(--demo-ink);
+      font-family: "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
+    }
+
+    body.dark .account-demo {
+      --demo-ink: rgba(255,255,255,.9);
+      --demo-sub: rgba(255,255,255,.58);
+      --demo-faint: rgba(255,255,255,.4);
+      --demo-line: rgba(255,255,255,.08);
+      --demo-soft: rgba(91,108,240,.18);
+    }
+
+    .account-demo .red { color: var(--demo-up); }
+    .account-demo .grn { color: var(--demo-down); }
+
+    .account-demo .card {
+      margin: 13px 16px 0;
+      background: #fff;
+      border-radius: var(--demo-radius);
+      box-shadow: var(--demo-shadow);
+      border: 1px solid var(--demo-line);
+      overflow: hidden;
+    }
+
+    body.dark .account-demo .card {
+      background: rgba(255,255,255,.06);
+    }
+
+    .account-demo .ch {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 16px 4px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--demo-sub);
+    }
+
+    .account-demo .ch .step {
+      width: 18px;
+      height: 18px;
+      border-radius: 6px;
+      background: var(--demo-soft);
+      color: var(--demo-yomi);
+      font-size: 10px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .account-demo .shock {
+      margin: 14px 16px 0;
+      border-radius: var(--demo-radius);
+      overflow: hidden;
+      position: relative;
+      color: #fff;
+      box-shadow: 0 18px 40px rgba(180,40,40,.25);
+      background: linear-gradient(135deg,#8a1f24 0,#c0392f 55%,#e05a3a 100%);
+    }
+
+    .account-demo .shock::after {
+      content: "";
+      position: absolute;
+      right: -40px;
+      top: -40px;
+      width: 150px;
+      height: 150px;
+      background: radial-gradient(circle,rgba(255,255,255,.16),transparent 70%);
+    }
+
+    .account-demo .shock .sk {
+      position: relative;
+      z-index: 1;
+      padding: 14px 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      opacity: .95;
+    }
+
+    .account-demo .shock .when {
+      margin-left: auto;
+      font-size: 10px;
+      opacity: .8;
+      font-weight: 600;
+    }
+
+    .account-demo .shock h3 {
+      position: relative;
+      z-index: 1;
+      padding: 9px 16px 0;
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.5;
+      margin: 0;
+      color: #fff;
+    }
+
+    .account-demo .chain {
+      position: relative;
+      z-index: 1;
+      margin: 11px 0 0;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .account-demo .chain::-webkit-scrollbar { display: none; }
+
+    .account-demo .chain .node {
+      background: rgba(255,255,255,.16);
+      border: 1px solid rgba(255,255,255,.25);
+      padding: 5px 9px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+
+    .account-demo .chain .arr { opacity: .7; }
+
+    .account-demo .drop {
+      position: relative;
+      z-index: 1;
+      margin: 12px 16px 0;
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      padding-bottom: 4px;
+    }
+
+    .account-demo .drop .pct {
+      font-size: 30px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .account-demo .drop .meta {
+      font-size: 10.5px;
+      opacity: .85;
+      line-height: 1.45;
+      padding-bottom: 2px;
+    }
+
+    .account-demo .judge {
+      position: relative;
+      z-index: 1;
+      margin: 11px 16px 14px;
+      background: rgba(0,0,0,.16);
+      border-radius: 11px;
+      padding: 9px 12px;
+      font-size: 11px;
+      line-height: 1.55;
+    }
+
+    .account-demo .impact .ib {
+      padding: 6px 16px 4px;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .account-demo .impact .hl {
+      color: var(--demo-up);
+      font-weight: 800;
+    }
+
+    .account-demo .wbar {
+      margin: 10px 16px 0;
+      height: 14px;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      font-size: 0;
+    }
+
+    .account-demo .wbar i { height: 100%; }
+
+    .account-demo .wlegend {
+      display: flex;
+      gap: 14px;
+      padding: 9px 16px 14px;
+      font-size: 10.5px;
+      color: var(--demo-sub);
+    }
+
+    .account-demo .wlegend span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .account-demo .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 3px;
+    }
+
+    .account-demo .stocks { padding: 4px 0 6px; }
+
+    .account-demo .stk {
+      padding: 12px 16px;
+      border-top: 1px solid var(--demo-line);
+    }
+
+    .account-demo .stk:first-child { border-top: none; }
+
+    .account-demo .s1 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .account-demo .rk,
+    .account-demo .pri {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      background: var(--demo-ink);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 20px;
+    }
+
+    .account-demo .nm { flex: 1; min-width: 0; }
+
+    .account-demo .nm b {
+      font-size: 13.5px;
+      font-weight: 700;
+    }
+
+    .account-demo .nm small {
+      font-size: 10px;
+      color: var(--demo-faint);
+      margin-left: 5px;
+    }
+
+    .account-demo .pr { text-align: right; }
+
+    .account-demo .pr b {
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .account-demo .pr small {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .account-demo .path,
+    .account-demo .mtxt {
+      margin: 9px 0 0;
+      font-size: 11.5px;
+      line-height: 1.6;
+      color: #374151;
+    }
+
+    body.dark .account-demo .path,
+    body.dark .account-demo .mtxt {
+      color: rgba(255,255,255,.68);
+    }
+
+    .account-demo .riskflag {
+      margin-top: 10px;
+      background: #fdf0ee;
+      border: 1px solid #f6cfc8;
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    body.dark .account-demo .riskflag {
+      background: rgba(226,59,59,.1);
+      border-color: rgba(226,59,59,.18);
+    }
+
+    .account-demo .rt {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--demo-up);
+    }
+
+    .account-demo .lamp {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--demo-up);
+      box-shadow: 0 0 0 3px rgba(226,59,59,.18);
+      animation: bl 1.3s infinite;
+    }
+
+    .account-demo .rg {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+      margin-top: 9px;
+    }
+
+    .account-demo .rcell {
+      background: #fff;
+      border: 1px solid #f3d8d2;
+      border-radius: 9px;
+      padding: 7px 9px;
+    }
+
+    body.dark .account-demo .rcell {
+      background: rgba(255,255,255,.07);
+      border-color: rgba(255,255,255,.08);
+    }
+
+    .account-demo .rcell small {
+      font-size: 9.5px;
+      color: var(--demo-sub);
+    }
+
+    .account-demo .rcell b {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--demo-up);
+      margin-top: 2px;
+    }
+
+    .account-demo .duo {
+      display: flex;
+      gap: 12px;
+      margin: 13px 16px 0;
+    }
+
+    .account-demo .duo .card {
+      margin: 0;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .account-demo .gauge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4px 0 14px;
+    }
+
+    .account-demo .gauge .num {
+      font-size: 30px;
+      font-weight: 800;
+      line-height: 1;
+      margin-top: 2px;
+    }
+
+    .account-demo .gauge .meta,
+    .account-demo .gauge .delta {
+      font-size: 10.5px;
+      color: var(--demo-sub);
+      margin-top: 4px;
+    }
+
+    .account-demo .gauge .delta {
+      color: var(--demo-up);
+      font-weight: 700;
+    }
+
+    .account-demo .heat { padding: 4px 14px 14px; }
+
+    .account-demo .hrow {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .account-demo .hlab {
+      font-size: 10px;
+      color: var(--demo-sub);
+      flex: 0 0 42px;
+    }
+
+    .account-demo .cells {
+      display: flex;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .account-demo .cells span {
+      flex: 1;
+      height: 13px;
+      border-radius: 3px;
+    }
+
+    .account-demo .axis {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9px;
+      color: var(--demo-faint);
+      padding-left: 48px;
+    }
+
+    .account-demo .ops { padding: 2px 16px 4px; }
+
+    .account-demo .opitem {
+      display: flex;
+      gap: 11px;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--demo-line);
+    }
+
+    .account-demo .opitem:last-child { border: none; }
+
+    .account-demo .pri.p1 { background: var(--demo-up); }
+    .account-demo .pri.p2 { background: var(--demo-amber); }
+    .account-demo .pri.p3 { background: var(--demo-sub); }
+
+    .account-demo .ot {
+      flex: 1;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .account-demo .handoff {
+      margin: 13px 16px 0;
+      background: linear-gradient(135deg,#fff,#fbf7ef);
+      border: 1px solid #ecdfc7;
+      border-radius: var(--demo-radius);
+      padding: 14px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      box-shadow: var(--demo-shadow);
+    }
+
+    body.dark .account-demo .handoff {
+      background: rgba(199,154,78,.1);
+      border-color: rgba(236,223,199,.16);
+    }
+
+    .account-demo .av {
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      flex: 0 0 42px;
+      background: linear-gradient(135deg,#c79a4e,#b8893a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .account-demo .ht { flex: 1; }
+
+    .account-demo .ht b {
+      font-size: 12.5px;
+      font-weight: 700;
+      display: block;
+    }
+
+    .account-demo .ht small {
+      font-size: 10.5px;
+      color: var(--demo-sub);
+      line-height: 1.5;
+      display: block;
+      margin-top: 3px;
+    }
+
+    .account-demo .go {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--demo-gold);
+      background: #fff;
+      border: 1px solid #ecdfc7;
+      padding: 8px 12px;
+      border-radius: 11px;
+    }
+
+    .account-demo .qchips {
+      display: flex;
+      gap: 9px;
+      padding: 14px 16px 4px;
+      flex-wrap: wrap;
+    }
+
+    .account-demo .qchip {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--demo-yomi);
+      background: #fff;
+      border: 1px solid var(--demo-line);
+      border-radius: 999px;
+      padding: 9px 14px;
+      box-shadow: var(--demo-shadow);
+    }
+
+    body.dark .account-demo .qchip,
+    body.dark .account-demo .go {
+      background: rgba(255,255,255,.08);
+    }
+
+    .account-demo .closer {
+      padding: 14px 22px 24px;
+      text-align: center;
+    }
+
+    .account-demo .closer p {
+      font-size: 10.5px;
+      color: var(--demo-faint);
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .builder-hero,
+    .builder-card {
+      border-radius: 16px;
+      padding: 14px;
+      background: var(--surface-strong);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .builder-hero {
+      background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(235, 242, 255, 0.78));
+      border-color: rgba(16, 94, 255, 0.16);
+    }
+
+    body.dark .builder-hero,
+    body.dark .builder-card {
+      background: rgba(255,255,255,0.06);
+    }
+
+    .builder-hero h3,
+    .builder-card h3 {
+      margin: 0 0 8px;
+      color: var(--navy);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .builder-copy {
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .builder-steps {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .builder-step {
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      gap: 8px;
+      align-items: start;
+      color: var(--ink);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .builder-step span:first-child,
+    .skill-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(16, 94, 255, 0.11);
+      color: var(--blue);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .skill-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .skill-pill {
+      min-height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 10px;
+      border: 1px solid rgba(16, 94, 255, 0.12);
+      background: rgba(255,255,255,0.7);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    body.dark .skill-pill {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .constraint-list {
+      display: grid;
+      gap: 7px;
+      margin-top: 10px;
+      color: var(--ink);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .constraint-list div {
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(23, 36, 78, 0.04);
+    }
+
+    body.dark .constraint-list div {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .agent-created {
+      border-radius: 16px;
+      padding: 14px;
+      background: linear-gradient(145deg, rgba(232, 246, 239, 0.92), rgba(255,255,255,0.82));
+      border: 1px solid rgba(0, 171, 97, 0.18);
+    }
+
+    body.dark .agent-created {
+      background: rgba(0,171,97,0.1);
+    }
+
+    .created-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--ink);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .created-title span {
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 11px;
+      color: var(--green);
+      background: rgba(0,171,97,0.1);
+      font-size: 11px;
+      line-height: 22px;
+    }
+
+    .agent-chat-flow {
+      display: grid;
+      gap: 10px;
+    }
+
+    .builder-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .builder-options span {
+      height: 26px;
+      padding: 0 10px;
+      border-radius: 13px;
+      background: rgba(16, 94, 255, 0.08);
+      color: var(--blue);
+      font-size: 12px;
+      line-height: 26px;
+      font-weight: 600;
+    }
+
+    .builder-options button {
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 15px;
+      border: 1px solid rgba(16, 94, 255, 0.18);
+      background: rgba(16, 94, 255, 0.08);
+      color: var(--blue);
+      font-size: 12px;
+      line-height: 28px;
+      font-weight: 600;
+    }
+
+    .builder-options button.primary {
+      background: #2f66f6;
+      color: #fff;
+      border-color: #2f66f6;
+    }
+
+    .skill-recommend {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+    }
+
+    .skill-recommend span {
+      min-height: 34px;
+      height: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 7px 8px;
+      border-radius: 12px;
+      background: rgba(16, 94, 255, 0.08);
+      color: var(--blue);
+      font-size: 12px;
+      line-height: 1.25;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .builder-action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .builder-action-row button {
+      height: 38px;
+      border-radius: 14px;
+      border: 1px solid rgba(16, 94, 255, 0.22);
+      background: rgba(16, 94, 255, 0.08);
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .builder-action-row button.primary {
+      background: #2f66f6;
+      color: #fff;
+      border-color: #2f66f6;
+    }
+
+    .builder-progress {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin: 0 0 10px;
+    }
+
+    .builder-progress span {
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(16, 94, 255, 0.12);
+    }
+
+    .builder-progress span.active {
+      background: #2f66f6;
+    }
+
+    .trader-message {
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 10px;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+
+    .trader-message img {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: contain;
+      border: 2px solid var(--red);
+      background: rgba(255,255,255,0.6);
+    }
+
+    .trader-bubble {
+      border-radius: 16px 16px 16px 4px;
+      padding: 11px 12px;
+      background: rgba(255,255,255,0.74);
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    body.dark .trader-bubble {
+      background: rgba(255,255,255,0.07);
+    }
+
+    .portfolio-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .stock-tile {
+      min-height: 70px;
+      border-radius: 10px;
+      padding: 10px;
+      background: rgba(255,255,255,0.72);
+      color: var(--ink);
+      font-size: 12px;
+    }
+
+    body.dark .stock-tile {
+      background: rgba(255,255,255,0.06);
+    }
+
+    .stock-tile strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 15px;
+    }
+
+    .backtest-card {
+      border-radius: 18px;
+      padding: 14px;
+      background: var(--surface-strong);
+      box-shadow: var(--shadow);
+    }
+
+    .seg-tabs {
+      height: 38px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      padding: 3px;
+      border-radius: 19px;
+      background: rgba(23, 36, 78, 0.05);
+      margin: 10px 0 14px;
+    }
+
+    .seg-tabs span {
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      color: var(--navy);
+      font-size: 13px;
+    }
+
+    .seg-tabs .active {
+      background: var(--red);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px 12px;
+      margin-bottom: 12px;
+    }
+
+    .metric {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 4px;
+      color: var(--ink);
+      font-size: 15px;
+    }
+
+    .backtest-chart {
+      width: 100%;
+      height: 110px;
+      display: block;
+    }
+
+    .agent-confirm {
+      width: 180px;
+      margin: 18px 0 18px auto;
+      padding: 13px 16px;
+      border-radius: 16px 16px 4px 16px;
+      border: 1px solid rgba(16, 94, 255, 0.22);
+      background: rgba(183, 216, 255, 0.32);
+      color: var(--navy);
+      font-size: 15px;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .dialog-placeholder {
+      height: 100%;
+      min-height: 132px;
+      border-radius: 18px;
+      padding: 18px;
+      display: grid;
+      align-content: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.52);
+      border: 1px dashed rgba(45, 58, 103, 0.16);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .dialog-placeholder.empty {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      min-height: 0;
+    }
+
+    body.dark .dialog-placeholder {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .assistant-reply {
+      border-radius: 16px;
+      padding: 13px 14px;
+      background: var(--surface-strong);
+      box-shadow: var(--shadow);
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .reply-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .reply-actions button {
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid rgba(16, 94, 255, 0.38);
+      background: rgba(255,255,255,0.72);
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .reply-actions button.primary {
+      background: #2f66f6;
+      color: #fff;
+      border-color: #2f66f6;
+    }
+
+    .plan-hero {
+      border-radius: 16px;
+      padding: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(239, 246, 255, 0.8));
+      border: 1px solid rgba(16, 94, 255, 0.18);
+      box-shadow: 0 12px 26px rgba(45, 58, 103, 0.08);
+    }
+
+    body.dark .plan-hero {
+      background: rgba(255,255,255,0.06);
+    }
+
+    .plan-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .plan-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(47, 102, 246, 0.12);
+      color: #2f66f6;
+      font-size: 14px;
+    }
+
+    .orange-tag {
+      height: 18px;
+      padding: 0 6px;
+      border-radius: 5px;
+      background: rgba(255, 149, 40, 0.14);
+      color: #ff7d1a;
+      font-size: 10px;
+      line-height: 18px;
+    }
+
+    .plan-rule {
+      display: grid;
+      grid-template-columns: 20px 1fr;
+      gap: 8px;
+      min-height: 28px;
+      align-items: center;
+      border-top: 1px solid var(--line);
+      color: var(--ink);
+      font-size: 12px;
+    }
+
+    .plan-rule:first-of-type {
+      border-top: 0;
+    }
+
+    .ai-plan-list {
+      margin-top: 12px;
+    }
+
+    .plan-tabs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0 8px;
+      overflow: hidden;
+    }
+
+    .plan-tabs span {
+      height: 28px;
+      padding: 0 12px;
+      border-radius: 14px;
+      background: rgba(23, 36, 78, 0.06);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 28px;
+      white-space: nowrap;
+    }
+
+    .plan-tabs .active {
+      background: #1d6dff;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .plan-item {
+      display: grid;
+      grid-template-columns: 38px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      min-height: 72px;
+      margin-top: 8px;
+      padding: 10px;
+      border-radius: 14px;
+      background: var(--surface-strong);
+      box-shadow: 0 8px 20px rgba(45, 58, 103, 0.06);
+    }
+
+    .plan-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #ff9f1a;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .plan-badge.blue { background: #4d8dff; }
+    .plan-badge.purple { background: #8b5cf6; }
+    .plan-badge.orange { background: #ff7043; }
+
+    .plan-item b {
+      display: block;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .plan-item small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.35;
+    }
+
+    .plan-status {
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .task-card {
+      margin-top: 16px;
+      border-radius: 18px;
+      padding: 18px;
+      background: var(--surface-strong);
+      box-shadow: var(--shadow);
+    }
+
+    .custom-result {
+      border-radius: 18px;
+      padding: 16px;
+      background: var(--surface-strong);
+      box-shadow: var(--shadow);
+    }
+
+    .custom-result h2 {
+      margin: 0 0 12px;
+      color: var(--navy);
+      font-size: 17px;
+      font-weight: 500;
+    }
+
+    .dialog-step {
+      margin-bottom: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.62);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    body.dark .dialog-step {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .save-default {
+      margin-top: 14px;
+      width: 100%;
+      height: 46px;
+      border-radius: 12px;
+      border: 0;
+      background: #2d3a67;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .change-list {
+      display: grid;
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .change-item {
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      gap: 8px;
+      align-items: start;
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .change-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(16, 94, 255, 0.1);
+      color: var(--blue);
+      font-size: 13px;
+    }
+
+    .field-preview {
+      margin-top: 14px;
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(16, 94, 255, 0.06);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .task-row {
+      display: grid;
+      grid-template-columns: 22px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      min-height: 34px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .task-row.active {
+      color: #3b84ff;
+      font-weight: 500;
+    }
+
+    .step-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: #111;
+      font-size: 10px;
+    }
+
+    .step-dot.loading {
+      border: 2px solid rgba(59, 132, 255, 0.25);
+      border-top-color: #3b84ff;
+      background: transparent;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .bottom-bar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 89px;
+      padding: 0;
+      background: url("./assets/components/bottom-bar.svg") center bottom / 390px 89px no-repeat;
+    }
+
+    body.dark .bottom-bar {
+      background: url("./assets/components/bottom-bar-dark.svg") center bottom / 390px 89px no-repeat;
+    }
+
+    .num {
+      font-family: "ZLCaiFuTi", "PingFang SC", sans-serif;
+      font-weight: 400;
+    }
+
+    .up { color: var(--red); }
+    .down { color: var(--green); }
+
+    @media (max-width: 900px) {
+      .studio {
+        grid-template-columns: 1fr;
+        padding: 22px;
+      }
+      .stage { min-height: auto; }
+      .layout-note {
+        position: static;
+        width: 390px;
+        max-width: 100%;
+        margin-top: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="studio">
+    <section class="brief">
+      <div class="eyebrow">新涨乐 AI 化信息架构 / 关键状态效果图</div>
+      <h1>让 Yomi 像一位随身金融助手一样工作</h1>
+      <p>我先用 Yomi 记住你的常驻偏好，把行情、持仓和提醒放在默认工作台；当你需要更专业的判断，再请账户管家或 AI交易员接手。页面不是固定菜单，而是会随着你的对话和确认持续变成“你的工作台”。</p>
+
+      <div class="controls" aria-label="状态控制">
+        <button class="active" data-state-button="home">默认工作台</button>
+        <button data-state-button="chat">对话</button>
+        <button data-state-button="custom">工作台定制</button>
+        <button data-state-button="account">账户管家Agent</button>
+        <button data-state-button="trader">交易员Agent</button>
+        <button data-state-button="agentCustom">agent定制</button>
+        <button data-state-button="addAgent">添加agent</button>
+        <button class="mode-toggle" id="modeToggle">切换暗色模式</button>
+      </div>
+
+      <div class="principles">
+        <div class="principle"><strong>L1 主交互层：</strong>Yomi 提供统一入口、统一对话人格和统一记忆，用户不再从菜单找功能。</div>
+        <div class="principle"><strong>L2 Agent 层：</strong>账户管家负责账户归因和风险体检；AI交易员披露自己的持仓、动作、回测，用户可选择跟随操作。</div>
+        <div class="principle"><strong>按需生长：</strong>默认工作台展示首页；对话时首页收起；工作台定制把用户需求保存回首页；agent定制则把一句指令生成可执行计划。</div>
+      </div>
+    </section>
+
+    <section class="stage">
+      <div class="phone" id="phone" data-state="home">
+        <div class="status-bar">
+          <span class="num">9:41</span>
+          <div class="ios-icons" aria-hidden="true">
+            <div class="signal"><span></span><span></span><span></span><span></span></div>
+            <div class="wifi"></div>
+            <div class="battery"></div>
+          </div>
+        </div>
+
+        <section class="agent-bar" aria-label="Agent 入口">
+          <div class="agent yomi active" data-agent="yomi">
+            <div class="avatar-pad"><img class="avatar" src="./assets/avatars/yomi.png" alt="Yomi" /></div>
+            <div class="agent-label">Yomi看</div>
+          </div>
+          <div class="agent" data-agent="account">
+            <div class="avatar-pad"><img class="avatar" src="./assets/avatars/event.png" alt="账户管家" /></div>
+            <div class="agent-label">账户管家</div>
+          </div>
+          <div class="agent" data-agent="trader">
+            <div class="avatar-pad"><img class="avatar" src="./assets/avatars/limit.png" alt="AI交易员" /></div>
+            <div class="agent-label">AI交易员</div>
+          </div>
+          <div class="agent t0-agent" data-agent="t0">
+            <div class="avatar-pad"><div class="t0-symbol">T0</div></div>
+            <div class="agent-label">T0助手</div>
+          </div>
+          <div class="agent add" data-agent="addAgent">
+            <div class="avatar-pad"><div class="add-symbol">+</div></div>
+            <div class="agent-label">添加Agent</div>
+          </div>
+        </section>
+
+        <main class="work-area">
+          <section class="overlay" id="overlay">
+            <div class="overlay-handle">
+              <span>Yomi看顶层覆层已收起</span>
+              <span>下拉展开</span>
+            </div>
+            <img class="overlay-image" src="./assets/components/workbench-default.svg" alt="Yomi 默认页常驻组件" />
+            <img class="workbench-svg workbench-signals" src="./assets/components/workbench-signals.svg" alt="定制后的 Yomi 默认页" />
+          </section>
+          <button class="overlay-collapse" id="overlayCollapse" type="button">收起⌃</button>
+
+          <section class="chat-panel">
+            <div class="bubble-question">宁德时代主力资金流入是否持续增强</div>
+            <div class="assistant-head">
+              <img src="./assets/avatars/yomi.png" alt="Yomi" />
+              <div class="assistant-name">Yomi</div>
+            </div>
+            <div class="tag-row">
+              <span class="think-tag">深度思考</span>
+              <span>模型完成答案生成⌄</span>
+            </div>
+            <div class="answer">
+              从当前看板信号看，宁德时代的主力资金流入有增强迹象，但还不能直接判断为“持续增强”。
+              <h3>一、当前信号</h3>
+              今日自选看板里，宁德时代排在资金关注前列，价格和涨幅同步走强，说明短线资金正在重新聚焦电池与新能源链。
+              <h3>二、需要确认的条件</h3>
+              如果接下来 30 分钟内主力净流入继续扩大，且成交量没有明显回落，增强信号才更可靠；如果只是开盘脉冲，容易出现冲高回落。
+              <h3>三、建议动作</h3>
+              我可以把宁德时代临时置顶，并在默认页增加“主力净流入、5日资金趋势、板块联动”三个字段，方便你持续观察。
+            </div>
+          </section>
+
+          <section class="customize-panel">
+            <div class="custom-round">
+              <div class="bubble-question">我要看下我盯盘的全部信号，并同步到我的首页的自选上方</div>
+              <div class="assistant-head">
+                <img src="./assets/avatars/yomi.png" alt="Yomi" />
+                <div class="assistant-name">Yomi</div>
+              </div>
+              <div class="tag-row">
+                <span class="think-tag">工作台定制</span>
+                <span>同步盯盘信号⌄</span>
+              </div>
+              <div class="dialog-step">我已整理出你盯盘中的全部信号，并可以同步到首页自选上方，作为固定模块展示。是否固定到首页？</div>
+              <div class="custom-result">
+                <h2>信号模块预览</h2>
+                <div class="change-list">
+                  <div class="change-item"><span class="change-icon">1</span><span>展示全部盯盘信号入口。</span></div>
+                  <div class="change-item"><span class="change-icon">2</span><span>固定到首页自选上方，方便开屏直接查看。</span></div>
+                </div>
+                <button class="save-default" id="syncSignals">固定到首页</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="agent-panel">
+            <div class="switch-view">
+              <div class="agent-card compact">
+                <h2 id="switchTitle">Agent 服务层 · 账户管家 / AI交易员</h2>
+                <p id="switchLead">我把账户诊断和交易执行拆成两个服务：账户管家负责归因、风险和持仓体检；AI交易员负责动态、持仓和快速交易。</p>
+                <div class="service-grid" id="switchGrid">
+                  <div class="service-card">
+                    <div class="service-head"><h3>账户管家</h3><span class="service-state">板块异动诊断</span></div>
+                    <p class="service-copy">半导体新规冲击提前发酵，账户管家沿“事件冲击 → 板块下跌 → 持仓传导”拆解你的账户暴露。</p>
+                    <div class="service-metrics">
+                      <div class="mini-metric"><span>账户健康度</span><strong>38 · 偏弱</strong></div>
+                      <div class="mini-metric"><span>受损方向权重</span><strong class="red">半导体 86%</strong></div>
+                    </div>
+                  </div>
+                  <div class="service-card">
+                    <div class="service-head"><h3>AI交易员</h3><span class="service-state">待确认</span></div>
+                    <p class="service-copy">读取账户管家的结论后，生成可执行方案：减仓、调仓、条件单或快速交易，用户确认后才进入交易通道。</p>
+                    <div class="service-tags"><span>生成交易方案</span><span>条件单</span><span>快速交易</span></div>
+                  </div>
+                </div>
+                <p id="switchPrompt">你可以先看账户管家的板块异动诊断，也可以让 AI交易员基于结论生成可确认的交易动作。</p>
+                <button class="cta" id="runAgent">让 AI交易员生成交易计划</button>
+                <button class="cta">暂不需要</button>
+              </div>
+            </div>
+
+            <div class="execute-view">
+              <div class="agent-card compact">
+                <h2 id="executeTitle">AI交易员 Domi</h2>
+                <p id="executeLead">我已读取账户管家的体检结论，正在把持仓风险转成可确认的交易动作。</p>
+                <div class="trader-board" id="executeBoard">
+                  <div class="trader-status">
+                    <div class="trader-panel">
+                      <h3>交易员动态</h3>
+                      <div class="activity-row"><div>半导体回撤触发降风险检查<small>09:41 · 来自账户管家</small></div><strong class="trade-red">高</strong></div>
+                      <div class="activity-row"><div>准备生成一组减仓条件单<small>等待用户确认</small></div><strong>待执行</strong></div>
+                    </div>
+                    <div class="trader-panel">
+                      <h3>当前持仓</h3>
+                      <div class="holding-row"><div>汇绿生态<small>301357 · 重仓</small></div><strong class="trade-red">+2.61%</strong></div>
+                      <div class="holding-row"><div>宝明科技<small>002992 · 半导体</small></div><strong class="trade-green">-1.82%</strong></div>
+                    </div>
+                  </div>
+                  <div class="service-tags"><span>减仓 15%</span><span>调低半导体暴露</span><span>保留观察仓</span></div>
+                </div>
+              </div>
+
+              <div class="agent-scroll">
+                <div class="dialog-placeholder">
+                  <strong>对话区</strong>
+                  这里展示用户指令、Agent 回复和执行计划。当前还没有发起对话，可以从底部推荐指令开始。
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        <section class="bottom-bar" aria-label="AI 输入底栏">
+          <div class="dock-command" id="dockCommand">
+            <span>/ 开始快速交易</span>
+            <span>↵</span>
+          </div>
+          <div class="agent-input-dock">
+            <div class="trade-input">问 Agent 任何问题...</div>
+            <div class="trade-actions">
+              <div class="trade-icon">/</div>
+              <div class="trade-icon">⚙</div>
+              <div class="trade-toggle">快速交易 <span class="toggle-pill"></span></div>
+              <div class="trade-send">↑</div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div class="layout-note top">
+        <strong id="noteTopTitle">顶部区域</strong>
+        <span id="noteTopText">Yomi 和 Agent 的入口区。Yomi看是千人千面的定制 GUI，对话时顶层看板会收起。</span>
+      </div>
+      <div class="layout-note middle">
+        <strong id="noteMiddleTitle">中间区域</strong>
+        <span id="noteMiddleText">承载 Agent 的执行结果、过程视图，以及用户生成或调整后的看板组件。</span>
+      </div>
+      <div class="layout-note bottom">
+        <strong id="noteBottomTitle">底部区域</strong>
+        <span id="noteBottomText">用户指令输入、快捷入口，以及 Agent plan / 执行动作的收发起点。</span>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const phone = document.getElementById("phone");
+    const buttons = [...document.querySelectorAll("[data-state-button]")];
+    const agents = [...document.querySelectorAll("[data-agent]")];
+    const overlay = document.getElementById("overlay");
+    const overlayCollapse = document.getElementById("overlayCollapse");
+    const runAgent = document.getElementById("runAgent");
+    const switchTitle = document.getElementById("switchTitle");
+    const switchLead = document.getElementById("switchLead");
+    const switchGrid = document.getElementById("switchGrid");
+    const switchPrompt = document.getElementById("switchPrompt");
+    const executeTitle = document.getElementById("executeTitle");
+    const executeLead = document.getElementById("executeLead");
+    const executeBoard = document.getElementById("executeBoard");
+    const executeView = document.querySelector(".execute-view");
+    const agentScroll = document.querySelector(".agent-scroll");
+    const dockCommand = document.getElementById("dockCommand");
+    const syncSignals = document.getElementById("syncSignals");
+    const noteTopTitle = document.getElementById("noteTopTitle");
+    const noteTopText = document.getElementById("noteTopText");
+    const noteMiddleTitle = document.getElementById("noteMiddleTitle");
+    const noteMiddleText = document.getElementById("noteMiddleText");
+    const noteBottomTitle = document.getElementById("noteBottomTitle");
+    const noteBottomText = document.getElementById("noteBottomText");
+    let currentAgent = "account";
+    let agentCustomTimer = null;
+    let currentAddAgentStep = 1;
+
+    const stateAgent = {
+      home: "yomi",
+      chat: "yomi",
+      custom: "yomi",
+      agentCustom: "trader",
+      addAgent: "addAgent"
+    };
+
+    const noteCopy = {
+      home: [
+        ["默认工作台", "展示 Yomi 默认首页。这里沉淀用户常看的行情、持仓、提醒和自选组件。"],
+        ["常驻组件层", "默认页不是固定菜单，而是可被对话保存、替换和重排的 GUI。"],
+        ["底部输入", "用户随时按住说话，发起查询、定制或唤起 Agent。"]
+      ],
+      chat: [
+        ["对话入口", "用户开始对话后，顶部工作台收起，把空间让给问答内容。"],
+        ["问答结果", "Yomi 先回答问题，也可以建议把字段、组件沉淀回默认页。"],
+        ["继续追问", "底部保留语音和快捷入口，用户可继续追问或进入定制。"]
+      ],
+      custom: [
+        ["工作台定制", "通过一轮自然语言对话，把用户要看的盯盘信号固定到默认首页。"],
+        ["确认式生成", "Yomi 先整理盯盘信号模块，并询问用户是否固定到首页。"],
+        ["保存回首页", "用户确认后回到默认工作台，页面更新为 3.svg 的定制结果。"]
+      ],
+      account: [
+        ["账户管家 Agent", "顶部选中账户管家，表示进入专业账户体检服务。"],
+        ["结果区", "上方 85% 是账户管家的结果区，内部可滑动，展示一句话判断、账户健康、风险热力和归因。"],
+        ["对话区", "下方是独立对话区。当前状态表示用户还没发起对话，所以只保留空间和底部推荐指令。"]
+      ],
+      trader: [
+        ["AI交易员 Agent", "顶部选中 AI交易员，进入交易员自己的计划、动作和跟随服务。"],
+        ["结果区", "上方 85% 展示 AI交易计划列表、状态和固定任务方案，结果区可独立滑动。"],
+        ["推荐指令", "底部推荐“跟随止盈我的黄金ETF”，点击后进入 agent定制流程。"]
+      ],
+      agentCustom: [
+        ["agent定制", "从交易员推荐指令进入，模拟用户发送“/跟随止盈我的黄金ETF”。"],
+        ["结果区更新", "上方只展示黄金 ETF 盈利保护计划，代表 Agent 已把一句话转成计划卡。"],
+        ["自动回复", "对话区先显示思考态，2 秒后 AI 回复并给出“自由模拟 / 生成实盘方案”两个动作。"]
+      ],
+      t0: [
+        ["T0助手 Agent", "顶部已新增 T0助手，表示用户创建出的 Agent 进入可复用入口。"],
+        ["策略看板", "结果区展示盘中价差机会、可执行策略参数和风险约束。"],
+        ["继续对话", "用户可以继续要求它监控持仓、生成 T0 方案或调整提醒频率。"]
+      ],
+      addAgent: [
+        ["添加 Agent", "通过自然语言创建一个新的金融 Agent，而不是让用户填写复杂表单。"],
+        ["创建结果", "上方展示 Agent 的目标、可调用 skill、提示词约束和创建后的入口形态。"],
+        ["对话流程", "下方展示 Yomi 如何追问服务目标、技能选择、风险边界，并让用户确认创建。"]
+      ]
+    };
+
+    function updateNotes(navState) {
+      const copy = noteCopy[navState] || noteCopy.home;
+      [[noteTopTitle, noteTopText], [noteMiddleTitle, noteMiddleText], [noteBottomTitle, noteBottomText]].forEach((nodes, index) => {
+        nodes[0].textContent = copy[index][0];
+        nodes[1].textContent = copy[index][1];
+      });
+    }
+
+    const agentCustomThinking = `
+      <div class="agent-confirm">/ 跟随止盈我的黄金ETF</div>
+      <div class="assistant-head">
+        <img src="./assets/avatars/limit.png" alt="AI交易员" />
+        <div class="assistant-name">AI交易员</div>
+      </div>
+      <div class="assistant-reply">正在理解你的跟随止盈需求，并匹配黄金 ETF 持仓与条件单参数...</div>
+    `;
+
+    const agentCustomReply = `
+      <div class="assistant-head">
+        <img src="./assets/avatars/limit.png" alt="AI交易员" />
+        <div class="assistant-name">AI交易员</div>
+      </div>
+      <div class="assistant-reply">
+        已理解你的需求。你希望在保留上涨空间的同时，控制利润回撤。我可以为你生成一个黄金ETF盈利保护计划，并默认推荐分批止盈和条件单参数。
+        <div class="reply-actions">
+          <button>先自由模拟</button>
+          <button class="primary" id="generateRealPlan">生成实盘交易方案</button>
+        </div>
+      </div>
+    `;
+
+    const goldProtectionPlan = `
+      <div class="plan-hero">
+        <div class="plan-title"><span class="plan-icon">盾</span><div>黄金ETF盈利保护计划<br><span class="orange-tag">尊享服务 · 买盘交易</span></div></div>
+        <div class="plan-rule"><span>◎</span><span>目标：保护已有浮盈，避免明显回撤</span></div>
+        <div class="plan-rule"><span>□</span><span>建议工具：分批止盈条件单</span></div>
+        <div class="plan-rule"><span>※</span><span>默认参数：以当前价为基准</span></div>
+        <div class="plan-rule"><span>1</span><span>第一档：上涨 3% 卖出 30%</span></div>
+      </div>
+    `;
+
+    const accountDemoResult = `
+      <div class="account-demo">
+        <div class="shock">
+          <div class="sk"><span class="bolt">⚡</span> 事件冲击 · 板块异动<span class="when">5/29 提前发酵</span></div>
+          <h3>美国商务部 5/31 落地半导体新规，A 股 5/29 情绪提前发酵</h3>
+          <div class="chain"><span class="node">出口管制升级</span><span class="arr">→</span><span class="node">国产替代预期生变</span><span class="arr">→</span><span class="node">资金出逃</span></div>
+          <div class="drop"><div class="pct">−5.66%</div><div class="meta">半导体板块<br>当日领跌两市</div></div>
+          <div class="judge">⏱ <b>持续性判断：</b>事件驱动型急跌，叠加板块前期涨幅过大，短期情绪扰动为主，但高估值环节的杀跌尚未充分释放，不宜抢反弹。</div>
+        </div>
+
+        <div class="card">
+          <div class="ch"><span class="step">02</span> 对你账户的影响 · 结论先行</div>
+          <div class="impact">
+            <div class="ib">总判断：<b class="hl">整体偏受损，且受损高度集中</b>。你的持仓<b>几乎全部位于本次异动板块内</b>，无对冲仓位，受损方向权重约 <b>86%</b>——这不是“分化”，是单边暴露。</div>
+            <div class="wbar"><i style="width:86%;background:var(--demo-up)"></i><i style="width:14%;background:#d8d9e0"></i></div>
+            <div class="wlegend"><span><i class="dot" style="background:var(--demo-up)"></i>半导体直接受损 86%</span><span><i class="dot" style="background:#d8d9e0"></i>现金/其他 14%</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="ch"><span class="step">03</span> 传导到你的持仓股</div>
+          <div class="stocks">
+            <div class="stk">
+              <div class="s1">
+                <div class="rk">1</div>
+                <div class="nm"><b>复旦微电</b><small>688385 · 半导体</small></div>
+                <div class="pr"><b class="red">−10.95%</b><small class="red">最大重仓 · 占比 38%</small></div>
+              </div>
+              <div class="path"><b>直接身处异动板块、且踩中最敏感环节。</b>其主力产品 FPGA 大量使用美国 IP 与 EDA 工具，高端军工 / AI FPGA 受新规限制最直接，是本次政策传导的“震中”。</div>
+              <div class="riskflag">
+                <div class="rt"><span class="lamp"></span> 个股风险 · 红灯（最高优先级）</div>
+                <div class="rg">
+                  <div class="rcell"><small>当日跌幅</small><b>−10.95%</b></div>
+                  <div class="rcell"><small>5 月累计涨幅</small><b>+92%</b></div>
+                  <div class="rcell"><small>估值（PE）</small><b>100 倍+</b></div>
+                  <div class="rcell"><small>资金动向</small><b>集中出逃</b></div>
+                </div>
+                <div class="path" style="margin-top:9px;color:#7a2a22">前期涨幅与估值已严重透支，新规又恰好打在它最依赖的技术命门上，杀跌大概率尚未结束，是当前账户里最需要优先处理的风险点。</div>
+              </div>
+            </div>
+            <div class="stk">
+              <div class="s1">
+                <div class="rk">2</div>
+                <div class="nm"><b>中芯国际</b><small>688981 · 晶圆制造</small></div>
+                <div class="pr"><b class="red">−6.20%</b><small class="red">占比 24%</small></div>
+              </div>
+              <div class="path"><b>直接身处异动板块，但受损路径不同于复旦微电。</b>作为制造端龙头，受设备与材料进口受限的中长期压制，但国产替代逻辑反而被强化，跌幅小于设计端，属于“错杀中带预期修复”。</div>
+            </div>
+            <div class="stk">
+              <div class="s1">
+                <div class="rk">3</div>
+                <div class="nm"><b>北方华创</b><small>002371 · 半导体设备</small></div>
+                <div class="pr"><b class="red">−4.10%</b><small class="red">占比 18%</small></div>
+              </div>
+              <div class="path"><b>产业链传导，方向偏中性。</b>设备国产化是新规下的受益逻辑，跌幅主要来自板块情绪拖累而非基本面，是组合内相对抗跌、且具备承接资金回流潜力的一只。</div>
+            </div>
+            <div class="stk minor">
+              <div class="mtxt"><b>其余轻仓（合计约 6%）：</b>韦尔股份、兆易创新等同属半导体设计，跌幅与板块同步，因权重较轻，暂无紧迫操作需求，跟随组合统一处理即可。</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="duo">
+          <div class="card">
+            <div class="ch">账户健康度</div>
+            <div class="gauge">
+              <svg width="100" height="56" viewBox="0 0 100 56"><path d="M8 52 A44 44 0 0 1 92 52" fill="none" stroke="#eef0f6" stroke-width="9" stroke-linecap="round"/><path d="M8 52 A44 44 0 0 1 36 13" fill="none" stroke="#e23b3b" stroke-width="9" stroke-linecap="round"/></svg>
+              <div class="num" style="color:var(--demo-up)">38</div><div class="meta">偏弱 · 单边暴露</div><div class="delta">较昨日 −21</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ch">风险热力</div>
+            <div class="heat">
+              <div class="hrow"><span class="hlab">集中度</span><div class="cells"><span style="background:#fbe6c8"></span><span style="background:#f5b78a"></span><span style="background:#e8704f"></span><span style="background:#d62f2f"></span></div></div>
+              <div class="hrow"><span class="hlab">回撤</span><div class="cells"><span style="background:#d8f0e4"></span><span style="background:#fbe6c8"></span><span style="background:#f5b78a"></span><span style="background:#e8704f"></span></div></div>
+              <div class="hrow"><span class="hlab">估值</span><div class="cells"><span style="background:#d8f0e4"></span><span style="background:#fbe6c8"></span><span style="background:#f5b78a"></span><span style="background:#d62f2f"></span></div></div>
+              <div class="axis"><span>低</span><span>中</span><span>高</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="ch"><span class="step">04</span> 操作建议 · 按紧迫程度排序</div>
+          <div class="ops">
+            <div class="opitem"><div class="pri p1">1</div><div class="ot"><b>优先处理复旦微电。</b>它是利空与高估值的共振点。若开盘无法企稳、或跌破关键支撑放量，应优先减仓兑现，不与之恋战。</div></div>
+            <div class="opitem"><div class="pri p2">2</div><div class="ot"><b>中芯、北方华创可暂持观察。</b>二者受损较轻且有国产替代支撑，待板块情绪企稳后再决定是否借其调整集中度。</div></div>
+            <div class="opitem"><div class="pri p3">3</div><div class="ot"><b>轻仓暂不动。</b>权重小、无紧迫性，跟随组合统一节奏即可。</div></div>
+          </div>
+        </div>
+
+        <div class="handoff">
+          <div class="av">王</div>
+          <div class="ht"><b>要不要减、减多少？这一步交给真人投顾</b><small>王思远已收到本次诊断摘要，可在你减仓决策前补充军工 FPGA 受限的更多细节，并协助确定减仓比例。</small></div>
+          <div class="go">预约</div>
+        </div>
+        <div class="qchips">
+          <div class="qchip">帮我盯紧复旦微电</div>
+          <div class="qchip">给我一个降集中度方案</div>
+          <div class="qchip">看更长区间盈亏</div>
+        </div>
+        <div class="closer"><p>沿着产业链一层层拆，把“板块跌了”变成“你这只票为什么跌、该不该动”。<br>内容由 Yomi 调用账户管家生成 · 不构成投资建议</p></div>
+      </div>
+    `;
+
+    function addAgentProgress(step) {
+      return `<div class="builder-progress">${[1, 2, 3, 4].map((item) => `<span class="${item <= step ? "active" : ""}"></span>`).join("")}</div>`;
+    }
+
+    function addAgentLead(step) {
+      if (step === 1) return "先通过对话确认用户想创建什么 Agent。创建流程分为：选择类型、选择 skill、确认提示词约束、创建并加入顶部入口。";
+      if (step === 2) return "用户已选择创建 T0 助手。现在进入 skill 选择步骤，确认它可以调用哪些金融能力。";
+      if (step === 3) return "已确认 T0 助手的核心 skill。现在通过对话设定提示词约束、风险边界和默认行为。";
+      return "T0 助手已创建完成，并加入顶部 Agent 区。用户后续可以直接点击入口或用自然语言唤起。";
+    }
+
+    function addAgentBoard(step) {
+      const skillCard = step >= 2 ? `
+        <div class="builder-card">
+          <h3>${step === 2 ? "推荐 skill · 待确认" : "可调用 skill"}</h3>
+          <div class="skill-grid">
+            <div class="skill-pill"><span class="skill-dot">1</span>分时异动识别</div>
+            <div class="skill-pill"><span class="skill-dot">2</span>持仓成本分析</div>
+            <div class="skill-pill"><span class="skill-dot">3</span>T0 价差测算</div>
+            <div class="skill-pill"><span class="skill-dot">4</span>交易风险校验</div>
+          </div>
+        </div>
+      ` : "";
+      const constraintCard = step >= 3 ? `
+        <div class="builder-card">
+          <h3>提示词约束</h3>
+          <div class="constraint-list">
+            <div>只分析我的持仓股，不主动推荐陌生股票。</div>
+            <div>只在盘中波动超过阈值时提醒，并采用低打扰频率。</div>
+            <div>所有建议必须说明理由、价差空间和失败条件。</div>
+            <div>不直接下单，只生成可确认的交易方案。</div>
+          </div>
+        </div>
+      ` : "";
+      const createdCard = step >= 4 ? `
+        <div class="agent-created">
+          <div class="created-title">T0助手 已创建<span>已加入顶部</span></div>
+          <p class="builder-copy" style="margin-top:8px;">默认指令：/ 看看今天哪些持仓适合做T0；/ 监控我的高波动持仓；/ 生成一版T0交易方案。</p>
+        </div>
+      ` : "";
+      return `
+        ${addAgentProgress(step)}
+        <div class="builder-hero">
+          <h3>${step === 1 ? "新 Agent · 等待定义" : (step >= 4 ? "T0助手 · 创建完成" : "T0助手 · 创建中")}</h3>
+          <p class="builder-copy">${step === 1 ? "Yomi 会先询问用户要创建什么 Agent，再逐步确认 skill、提示词约束和发布方式。" : "在盘中监控持仓股波动，发现可做 T0 的价差机会，并给出可确认的操作建议。"}</p>
+          <div class="builder-steps">
+            <div class="builder-step"><span>1</span><div><b>选择类型</b><br>${step >= 2 ? "已选择：T0 助手。" : "等待用户选择要创建的 Agent 类型。"}</div></div>
+            <div class="builder-step"><span>2</span><div><b>Skill 选择</b><br>${step === 1 ? "等待用户确认可调用技能。" : (step === 2 ? "推荐分时异动、持仓成本、T0 价差、交易风险校验，等待确认。" : "已选择分时异动、持仓成本、T0 价差、交易风险校验。")}</div></div>
+            <div class="builder-step"><span>3</span><div><b>提示词约束</b><br>${step >= 3 ? "已设定低打扰、不自动下单和必须说明失败条件。" : "等待用户确认边界和风险约束。"}</div></div>
+            <div class="builder-step"><span>4</span><div><b>发布方式</b><br>${step >= 4 ? "已加入顶部 Agent 区，成为可复用入口。" : "确认后加入顶部 Agent 区。"}</div></div>
+          </div>
+        </div>
+        ${skillCard}
+        ${constraintCard}
+        ${createdCard}
+      `;
+    }
+
+    function addAgentChat(step) {
+      const chooseType = `
+        <div class="assistant-head">
+          <img src="./assets/avatars/yomi.png" alt="Yomi" />
+          <div class="assistant-name">Yomi</div>
+        </div>
+        <div class="assistant-reply">
+          你想创建一个什么类型的 Agent？我可以先从常用金融能力里帮你搭一版。
+          <div class="builder-options">
+            <button data-add-step="2">T0</button><button>选股</button><button>复盘</button><button>风控</button><button>公告解读</button><button>持仓诊断</button>
+          </div>
+        </div>
+      `;
+      const chooseSkill = step >= 2 ? `
+        <div class="agent-confirm">我想做一个 T0 助手，帮我盯盘内波动机会。</div>
+        <div class="assistant-reply">
+          好的，我会把它定义成“盘中 T0 Agent”。下一步先选择它能调用的 skill。建议开启：分时异动识别、持仓成本分析、T0 价差测算、交易风险校验；默认关闭自动下单。
+          <div class="skill-recommend"><span>分时异动识别</span><span>持仓成本分析</span><span>T0 价差测算</span><span>交易风险校验</span></div>
+          <div class="builder-action-row"><button data-add-step="3" class="primary">确认这些 skill</button><button>调整 skill</button></div>
+        </div>
+      ` : "";
+      const setConstraint = step >= 3 ? `
+        <div class="agent-confirm">可以，先不要自动下单，只给建议。</div>
+        <div class="assistant-reply">
+          已记录。它将只分析你的持仓股，采用低打扰提醒；每次建议都必须给出理由、价差空间和失败条件。
+          <div class="builder-options"><button data-add-step="4" class="primary">创建并添加到顶部</button><button>继续调整</button></div>
+        </div>
+      ` : "";
+      const created = step >= 4 ? `
+        <div class="agent-confirm">创建并添加到顶部。</div>
+        <div class="assistant-reply">已创建 <b>T0助手</b>。我会把它放到 AI交易员后面。之后你可以直接点击它，或者说“让 T0助手看一下今天能不能做价差”。</div>
+      ` : "";
+      return `<div class="agent-chat-flow">${chooseType}${chooseSkill}${setConstraint}${created}</div>`;
+    }
+
+    const agentViews = {
+      account: {
+        title: "账户管家 · 板块异动诊断",
+        lead: "半导体新规冲击提前发酵，我把它对你账户的影响沿事件、板块和持仓股拆开了。",
+        prompt: "账户管家先给出账户受损路径和操作优先级，需要拍板的减仓比例可接力给真人投顾。",
+        action: "让 AI交易员接手生成交易计划",
+        command: "/ 查看账户管家结论",
+        avatar: "./assets/avatars/event.png",
+        name: "账户管家",
+        executeTitle: "账户管家",
+        executeLead: "半导体新规砸下来，我把它对你账户的影响拆开了：事件冲击、账户暴露、个股传导和操作优先级。",
+        executeAnswer: "我已整理好板块异动诊断。复旦微电是当前最高优先级风险点；中芯国际、北方华创可暂持观察。",
+        chat: `
+          <div class="dialog-placeholder empty"></div>
+        `,
+        grid: `
+          <div class="shock-card">
+            <div class="shock-title">事件冲击 · 板块异动<span>5/29 提前发酵</span></div>
+            <h3>美国商务部 5/31 落地半导体新规，A 股 5/29 情绪提前发酵</h3>
+            <div class="event-chain"><b>出口管制升级</b>→<b>国产替代预期生变</b>→<b>资金出逃</b></div>
+            <div class="shock-drop"><strong>-5.66%</strong><span>半导体板块当日领跌两市</span></div>
+            <div class="judge-copy">持续性判断：事件驱动型急跌，叠加板块前期涨幅过大，短期情绪扰动为主，但高估值环节杀跌尚未充分释放，不宜抢反弹。</div>
+          </div>
+          <div class="impact-card">
+            <div class="section-kicker">对你账户的影响 · 结论先行<span>02</span></div>
+            <p class="exposure-copy">总判断：<strong>整体偏受损，且受损高度集中</strong>。你的持仓几乎全部位于本次异动板块内，无对冲仓位，受损方向权重约 <strong>86%</strong>。</p>
+            <div class="exposure-bar"></div>
+            <div class="exposure-legend"><span>半导体直接受损 86%</span><span>现金/其他 14%</span></div>
+          </div>
+          <div class="stock-impact-card">
+            <div class="section-kicker">传导到你的持仓股<span>03</span></div>
+            <div class="stock-impact">
+              <div class="stock-impact-head">
+                <div class="impact-rank">1</div>
+                <div class="stock-impact-name"><b>复旦微电</b><small>688385 · 半导体</small></div>
+                <div class="stock-impact-loss"><b>-10.95%</b><small>占比 38%</small></div>
+              </div>
+              <div class="stock-impact-path"><b>直接身处异动板块、且踩中最敏感环节。</b>FPGA 大量使用美国 IP 与 EDA 工具，是本次政策传导的“震中”。</div>
+              <div class="risk-flag">个股风险 · 红灯（最高优先级）
+                <div class="risk-grid"><span>跌幅 -10.95%</span><span>5月 +92%</span><span>PE 100倍+</span><span>资金出逃</span></div>
+              </div>
+            </div>
+            <div class="stock-impact">
+              <div class="stock-impact-head">
+                <div class="impact-rank">2</div>
+                <div class="stock-impact-name"><b>中芯国际</b><small>688981 · 晶圆制造</small></div>
+                <div class="stock-impact-loss"><b>-6.20%</b><small>占比 24%</small></div>
+              </div>
+              <div class="stock-impact-path">制造端龙头受设备与材料进口限制压制，但国产替代逻辑同步强化，属于“错杀中带预期修复”。</div>
+            </div>
+            <div class="stock-impact">
+              <div class="stock-impact-head">
+                <div class="impact-rank">3</div>
+                <div class="stock-impact-name"><b>北方华创</b><small>002371 · 半导体设备</small></div>
+                <div class="stock-impact-loss"><b>-4.10%</b><small>占比 18%</small></div>
+              </div>
+              <div class="stock-impact-path">设备国产化方向偏中性，跌幅主要来自板块情绪拖累，具备承接资金回流潜力。</div>
+            </div>
+          </div>
+          <div class="health-grid">
+            <div class="health-score">
+              <div class="service-head"><h3>账户健康度</h3></div>
+              <div class="score-arc"></div>
+              <div class="score-num">38</div>
+              <div class="score-note trade-green">偏弱 · 单边暴露</div>
+            </div>
+            <div class="heat-card">
+              <div class="service-head"><h3>风险热力</h3></div>
+              <div class="heat-row"><span>集中度</span><div class="heat-cells"><span style="background:#f8e0bc"></span><span style="background:#f1b37c"></span><span style="background:#e7744e"></span><span style="background:#d94a3c"></span></div></div>
+              <div class="heat-row"><span>波动率</span><div class="heat-cells"><span style="background:#f8e0bc"></span><span style="background:#f1b37c"></span><span style="background:#e7744e"></span><span style="background:#d94a3c"></span></div></div>
+              <div class="heat-row"><span>回撤</span><div class="heat-cells"><span style="background:#cdebdc"></span><span style="background:#f8e0bc"></span><span style="background:#f1b37c"></span><span style="background:#e7744e"></span></div></div>
+            </div>
+          </div>
+          <div class="priority-card">
+            <div class="section-kicker">操作优先级<span>账户管家建议</span></div>
+            <div class="priority-item"><div class="impact-rank">1</div><div><b>优先处理复旦微电。</b>它是利空与高估值的共振点，若开盘无法企稳或跌破关键支撑放量，应优先减仓兑现。</div></div>
+            <div class="priority-item"><div class="impact-rank">2</div><div><b>中芯、北方华创可暂持观察。</b>二者受损较轻且有国产替代支撑，待板块情绪企稳后再决定是否借其调整集中度。</div></div>
+          </div>
+          <div class="advisor-card">
+            <div class="advisor-avatar">王</div>
+            <div><b>要不要减、减多少？这一步交给真人投顾</b><small>王思远已收到本次诊断摘要，可补充军工 FPGA 受限细节，并协助确定减仓比例。</small></div>
+            <div class="advisor-cta">预约</div>
+          </div>
+        `,
+        board: `
+          <div class="shock-card">
+            <div class="shock-title">事件冲击 · 板块异动<span>5/29 提前发酵</span></div>
+            <h3>美国商务部 5/31 落地半导体新规，A 股 5/29 情绪提前发酵</h3>
+            <div class="event-chain"><b>出口管制升级</b>→<b>国产替代预期生变</b>→<b>资金出逃</b></div>
+            <div class="shock-drop"><strong>-5.66%</strong><span>半导体板块当日领跌两市</span></div>
+            <div class="judge-copy">持续性判断：事件驱动型急跌，叠加板块前期涨幅过大，短期情绪扰动为主，但高估值环节杀跌尚未充分释放，不宜抢反弹。</div>
+          </div>
+          <div class="impact-card">
+            <div class="section-kicker">对你账户的影响 · 结论先行<span>02</span></div>
+            <p class="exposure-copy">总判断：<strong>整体偏受损，且受损高度集中</strong>。你的持仓几乎全部位于本次异动板块内，无对冲仓位，受损方向权重约 <strong>86%</strong>。</p>
+            <div class="exposure-bar"></div>
+            <div class="exposure-legend"><span>半导体直接受损 86%</span><span>现金/其他 14%</span></div>
+          </div>
+          <div class="stock-impact-card">
+            <div class="section-kicker">传导到你的持仓股<span>03</span></div>
+            <div class="stock-impact">
+              <div class="stock-impact-head">
+                <div class="impact-rank">1</div>
+                <div class="stock-impact-name"><b>复旦微电</b><small>688385 · 半导体</small></div>
+                <div class="stock-impact-loss"><b>-10.95%</b><small>占比 38%</small></div>
+              </div>
+              <div class="stock-impact-path"><b>直接身处异动板块、且踩中最敏感环节。</b>FPGA 大量使用美国 IP 与 EDA 工具，是本次政策传导的“震中”。</div>
+              <div class="risk-flag">个股风险 · 红灯（最高优先级）
+                <div class="risk-grid"><span>跌幅 -10.95%</span><span>5月 +92%</span><span>PE 100倍+</span><span>资金出逃</span></div>
+              </div>
+            </div>
+            <div class="stock-impact">
+              <div class="stock-impact-head">
+                <div class="impact-rank">2</div>
+                <div class="stock-impact-name"><b>中芯国际</b><small>688981 · 晶圆制造</small></div>
+                <div class="stock-impact-loss"><b>-6.20%</b><small>占比 24%</small></div>
+              </div>
+              <div class="stock-impact-path">制造端龙头受设备与材料进口限制压制，但国产替代逻辑同步强化，属于“错杀中带预期修复”。</div>
+            </div>
+            <div class="stock-impact">
+              <div class="stock-impact-head">
+                <div class="impact-rank">3</div>
+                <div class="stock-impact-name"><b>北方华创</b><small>002371 · 半导体设备</small></div>
+                <div class="stock-impact-loss"><b>-4.10%</b><small>占比 18%</small></div>
+              </div>
+              <div class="stock-impact-path">设备国产化方向偏中性，跌幅主要来自板块情绪拖累，具备承接资金回流潜力。</div>
+            </div>
+          </div>
+          <div class="health-grid">
+            <div class="health-score">
+              <div class="service-head"><h3>账户健康度</h3></div>
+              <div class="score-arc"></div>
+              <div class="score-num">38</div>
+              <div class="score-note trade-green">偏弱 · 单边暴露</div>
+            </div>
+            <div class="heat-card">
+              <div class="service-head"><h3>风险热力</h3></div>
+              <div class="heat-row"><span>集中度</span><div class="heat-cells"><span style="background:#f8e0bc"></span><span style="background:#f1b37c"></span><span style="background:#e7744e"></span><span style="background:#d94a3c"></span></div></div>
+              <div class="heat-row"><span>波动率</span><div class="heat-cells"><span style="background:#f8e0bc"></span><span style="background:#f1b37c"></span><span style="background:#e7744e"></span><span style="background:#d94a3c"></span></div></div>
+              <div class="heat-row"><span>回撤</span><div class="heat-cells"><span style="background:#cdebdc"></span><span style="background:#f8e0bc"></span><span style="background:#f1b37c"></span><span style="background:#e7744e"></span></div></div>
+            </div>
+          </div>
+          <div class="priority-card">
+            <div class="section-kicker">操作优先级<span>账户管家建议</span></div>
+            <div class="priority-item"><div class="impact-rank">1</div><div><b>优先处理复旦微电。</b>它是利空与高估值的共振点，若开盘无法企稳或跌破关键支撑放量，应优先减仓兑现。</div></div>
+            <div class="priority-item"><div class="impact-rank">2</div><div><b>中芯、北方华创可暂持观察。</b>二者受损较轻且有国产替代支撑，待板块情绪企稳后再决定是否借其调整集中度。</div></div>
+          </div>
+          <div class="advisor-card">
+            <div class="advisor-avatar">王</div>
+            <div><b>要不要减、减多少？这一步交给真人投顾</b><small>王思远已收到本次诊断摘要，可补充军工 FPGA 受限细节，并协助确定减仓比例。</small></div>
+            <div class="advisor-cta">预约</div>
+          </div>
+        `
+      },
+      trader: {
+        title: "AI交易员 · 持仓、动作与回测披露",
+        lead: "我正在根据你的选股结果，结合盘中信号智能研判趋势，自动执行模拟操作。你可以查看我的持仓、动作和回测表现，再决定是否跟随。",
+        prompt: "AI交易员会先模拟，不直接下单。你可以修改策略、终止模拟，或在确认后开启快速交易。",
+        action: "查看并跟随交易员动作",
+        command: "/ 跟随止盈我的黄金ETF",
+        avatar: "./assets/avatars/limit.png",
+        name: "AI交易员",
+        executeTitle: "AI交易员 Yomi",
+        executeLead: "我披露自己的模拟持仓、动作记录和回测结果，你确认后才进入跟随操作。",
+        executeAnswer: "我已基于事件捕手 4月11日入选组合启动模拟交易。当前持仓和动作都可追踪，回测暂时跑赢沪深300和超额收益基准。",
+        chat: `
+          <div class="dialog-placeholder empty"></div>
+        `,
+        grid: `
+          <div class="trader-message">
+            <img src="./assets/avatars/yomi.png" alt="交易员Yomi" />
+            <div class="trader-bubble">
+              我正在根据你的选股结果，结合盘中信号智能研判趋势，自动执行模拟操作。
+              <div class="service-tags"><span>修改</span><span>终止</span><span>历史记录</span></div>
+            </div>
+          </div>
+          <div class="service-card">
+            <div class="service-head"><h3>我的选股</h3><span class="service-state">事件捕手 4月11日入选</span></div>
+            <div class="portfolio-strip">
+              <div class="stock-tile">莱百股份<strong>33.65</strong><span class="trade-green">-0.53%</span></div>
+              <div class="stock-tile">华大智造<strong>33.65</strong><span class="trade-red">+4.53%</span></div>
+              <div class="stock-tile">中游资本<strong>33.65</strong><span>持仓中</span></div>
+            </div>
+          </div>
+          <div class="backtest-card">
+            <div class="service-head"><h3>AI模拟交易</h3><span class="service-state">持续监控中</span></div>
+            <div class="seg-tabs"><span>动态</span><span>模拟委托模</span><span class="active">模拟持仓</span></div>
+            <div class="metric-grid">
+              <div class="metric">模拟账户总资产<strong>11,000,000.00</strong></div>
+              <div class="metric">模拟总收益<strong class="trade-red">+10,000.00</strong></div>
+              <div class="metric">模拟今日收益<strong class="trade-red">+2222.22</strong></div>
+              <div class="metric">累计收益<strong class="trade-red">+123000.00</strong></div>
+              <div class="metric">累计收益率<strong class="trade-red">+6.88%</strong></div>
+              <div class="metric">最大回撤<strong class="trade-green">-14.27%</strong></div>
+            </div>
+            <svg class="backtest-chart" viewBox="0 0 330 110" aria-label="回测走势">
+              <path d="M0 88 L330 88" stroke="rgba(111,122,148,.18)" />
+              <path d="M0 66 L330 66" stroke="rgba(111,122,148,.14)" />
+              <path d="M0 44 L330 44" stroke="rgba(111,122,148,.14)" />
+              <path d="M0 22 L330 22" stroke="rgba(111,122,148,.14)" />
+              <polyline points="0,95 20,88 40,82 60,76 80,70 100,64 120,56 140,52 160,42 180,49 200,34 220,40 240,25 260,30 280,19 300,31 330,24" fill="none" stroke="#176bff" stroke-width="2"/>
+              <polyline points="0,96 20,90 40,84 60,80 80,74 100,70 120,65 140,60 160,55 180,59 200,48 220,53 240,42 260,47 280,36 300,44 330,39" fill="none" stroke="#ff3b4f" stroke-width="2"/>
+              <polyline points="0,98 20,93 40,88 60,82 80,78 100,74 120,69 140,66 160,62 180,64 200,56 220,60 240,51 260,55 280,47 300,54 330,49" fill="none" stroke="#ff9b21" stroke-width="2"/>
+            </svg>
+          </div>
+        `,
+        board: `
+          <div class="ai-plan-list">
+            <div class="service-head"><h3>我的AI交易计划</h3><span class="service-state">查看全部</span></div>
+            <div class="plan-tabs"><span class="active">全部 8</span><span>进行中 4</span><span>待确认 1</span><span>已完成 3</span></div>
+            <div class="plan-item"><div class="plan-badge">金</div><div><b>黄金ETF盈利保护计划</b><small>最新动态：09:31 已创建保护性止盈条件单，等待触发</small></div><div class="plan-status">条件单监控中</div></div>
+            <div class="plan-item"><div class="plan-badge blue">宁</div><div><b>宁德时代观察计划</b><small>今日继续观察低吸机会，暂未触发买入</small></div><div class="plan-status">第2天</div></div>
+            <div class="plan-item"><div class="plan-badge purple">涨</div><div><b>涨停猎手模拟计划</b><small>已输出12只候选股，等待收益前模拟买入</small></div><div class="plan-status">监控中</div></div>
+            <div class="plan-item"><div class="plan-badge orange">万</div><div><b>万科A波段处理计划</b><small>Yomi 已协调 AI交易员给出两种方案</small></div><div class="plan-status trade-red">等待选择</div></div>
+            <div class="service-head"><h3>固定任务方案</h3></div>
+            <div class="trader-status">
+              <div class="trader-panel"><h3>涨停猎手</h3><p class="service-copy">按预设规则自动选股，模拟买卖与复盘。</p><button class="cta">开启</button></div>
+              <div class="trader-panel"><h3>事件捕手</h3><p class="service-copy">围绕事件监测机会，自动跟踪、执行与复盘。</p><button class="cta">开启</button></div>
+            </div>
+          </div>
+        `
+      },
+      traderCustom: {
+        title: "AI交易员 · 黄金ETF跟随止盈计划",
+        lead: "已理解你的需求。你希望在保留上涨空间的同时控制利润回撤，我可以为你生成黄金 ETF 盈利保护计划，并默认推荐分批止盈和条件单参数。",
+        prompt: "交易员把一句指令转成了可执行的黄金 ETF 计划。",
+        action: "跟随止盈我的黄金ETF",
+        command: "/ 跟随止盈我的黄金ETF",
+        avatar: "./assets/avatars/limit.png",
+        name: "AI交易员",
+        executeTitle: "AI交易员 Yomi",
+        executeLead: "等待你确认是否生成实盘交易方案。",
+        executeAnswer: "已理解你的需求。你希望在保留上涨空间的同时控制利润回撤。我可以为你生成一个黄金ETF盈利保护计划，并默认推荐分批止盈和条件单参数。",
+        board: `<div class="dialog-placeholder empty"></div>`,
+        chat: `
+          <div class="dialog-placeholder empty"></div>
+        `
+      },
+      t0: {
+        title: "T0助手 · 盘中价差策略",
+        lead: "我只监控你的持仓股，在盘中出现较明确价差机会时提醒；默认不自动下单，只生成可确认方案。",
+        prompt: "T0助手会低打扰运行，只有价差空间、持仓成本和风险校验同时满足时才提示。",
+        action: "生成一版T0交易方案",
+        command: "/ 看看今天哪些持仓适合做T0",
+        avatar: "",
+        name: "T0助手",
+        executeTitle: "T0助手",
+        executeLead: "已接入你的持仓与盘中分时数据，正在监控可做 T0 的价差机会。",
+        executeAnswer: "目前有 2 个持仓进入观察阈值。我不会自动下单，只会生成可确认的 T0 策略。",
+        grid: `
+          <div class="t0-card">
+            <h3>盘中机会</h3>
+            <div class="t0-opportunity"><div>华大智造<small>分时回落后资金重新回流，价差空间满足阈值</small></div><strong>+1.8%</strong></div>
+            <div class="t0-opportunity"><div>莱百股份<small>波动放大但成交量不足，建议继续观察</small></div><strong>观察</strong></div>
+            <div class="t0-opportunity"><div>黄金ETF<small>已有浮盈仓位，可只做保护性止盈，不建议反向做差</small></div><strong>低频</strong></div>
+          </div>
+          <div class="t0-card">
+            <h3>默认策略参数</h3>
+            <div class="t0-plan-grid">
+              <div><b>触发条件</b>盘中回撤超过 1.2%，且资金流重新转正</div>
+              <div><b>交易方式</b>先卖后买，只生成确认单</div>
+              <div><b>风控边界</b>单票不超过持仓 30%，不追高补仓</div>
+            </div>
+          </div>
+          <div class="builder-card">
+            <h3>已启用 skill</h3>
+            <div class="skill-grid">
+              <div class="skill-pill"><span class="skill-dot">1</span>分时异动识别</div>
+              <div class="skill-pill"><span class="skill-dot">2</span>持仓成本分析</div>
+              <div class="skill-pill"><span class="skill-dot">3</span>T0 价差测算</div>
+              <div class="skill-pill"><span class="skill-dot">4</span>交易风险校验</div>
+            </div>
+          </div>
+        `,
+        board: `
+          <div class="t0-card">
+            <h3>盘中机会</h3>
+            <div class="t0-opportunity"><div>华大智造<small>分时回落后资金重新回流，价差空间满足阈值</small></div><strong>+1.8%</strong></div>
+            <div class="t0-opportunity"><div>莱百股份<small>波动放大但成交量不足，建议继续观察</small></div><strong>观察</strong></div>
+            <div class="t0-opportunity"><div>黄金ETF<small>已有浮盈仓位，可只做保护性止盈，不建议反向做差</small></div><strong>低频</strong></div>
+          </div>
+          <div class="t0-card">
+            <h3>默认策略参数</h3>
+            <div class="t0-plan-grid">
+              <div><b>触发条件</b>盘中回撤超过 1.2%，且资金流重新转正</div>
+              <div><b>交易方式</b>先卖后买，只生成确认单</div>
+              <div><b>风控边界</b>单票不超过持仓 30%，不追高补仓</div>
+            </div>
+          </div>
+          <div class="builder-card">
+            <h3>已启用 skill</h3>
+            <div class="skill-grid">
+              <div class="skill-pill"><span class="skill-dot">1</span>分时异动识别</div>
+              <div class="skill-pill"><span class="skill-dot">2</span>持仓成本分析</div>
+              <div class="skill-pill"><span class="skill-dot">3</span>T0 价差测算</div>
+              <div class="skill-pill"><span class="skill-dot">4</span>交易风险校验</div>
+            </div>
+          </div>
+        `,
+        chat: `
+          <div class="assistant-head">
+            <div class="t0-symbol" style="width:36px;height:36px;border-radius:14px;font-size:13px;">T0</div>
+            <div class="assistant-name">T0助手</div>
+          </div>
+          <div class="assistant-reply">我会低打扰监控你的持仓股。当前华大智造进入价差观察区，是否需要我生成一版可确认的 T0 交易方案？</div>
+        `
+      },
+      addAgent: {
+        title: "添加 Agent · 通过对话创建新服务",
+        lead: "Yomi 会先理解你想新增的金融服务，再帮你选择 skill、设定提示词约束，最后生成一个可放到顶部入口里的 Agent。",
+        prompt: "这个流程表达的是：Agent 可以按需创建，而不是只能使用系统预置角色。",
+        action: "创建并添加到顶部",
+        command: "/ 创建一个T0助手",
+        avatar: "",
+        name: "添加Agent",
+        executeTitle: "添加 Agent",
+        executeLead: "正在通过对话创建一个新的金融 Agent：T0助手。用户确认后，它会成为顶部 Agent 区的新入口。",
+        executeAnswer: "已创建 T0助手。后续用户可以点击顶部入口，或直接说“让 T0助手看一下今天能不能做价差”。",
+        grid: `
+          <div class="builder-hero">
+            <h3>T0助手 · 创建预览</h3>
+            <p class="builder-copy">在盘中监控持仓股波动，发现可做 T0 的价差机会，并给出可确认的操作建议。</p>
+            <div class="builder-steps">
+              <div class="builder-step"><span>1</span><div><b>服务目标</b><br>只盯我的持仓股，识别盘中价差机会。</div></div>
+              <div class="builder-step"><span>2</span><div><b>Skill 选择</b><br>分时异动、持仓成本、T0 价差、交易风险校验。</div></div>
+              <div class="builder-step"><span>3</span><div><b>提示词约束</b><br>不自动下单，低打扰，必须给出理由和失败条件。</div></div>
+              <div class="builder-step"><span>4</span><div><b>发布方式</b><br>确认后加入顶部 Agent 区，成为可复用入口。</div></div>
+            </div>
+          </div>
+          <div class="builder-card">
+            <h3>可调用 skill</h3>
+            <div class="skill-grid">
+              <div class="skill-pill"><span class="skill-dot">1</span>分时异动识别</div>
+              <div class="skill-pill"><span class="skill-dot">2</span>持仓成本分析</div>
+              <div class="skill-pill"><span class="skill-dot">3</span>T0 价差测算</div>
+              <div class="skill-pill"><span class="skill-dot">4</span>交易风险校验</div>
+            </div>
+          </div>
+          <div class="builder-card">
+            <h3>提示词约束</h3>
+            <div class="constraint-list">
+              <div>只分析我的持仓股，不主动推荐陌生股票。</div>
+              <div>只在盘中波动超过阈值时提醒，并采用低打扰频率。</div>
+              <div>所有建议必须说明理由、价差空间和失败条件。</div>
+              <div>不直接下单，只生成可确认的交易方案。</div>
+            </div>
+          </div>
+          <div class="agent-created">
+            <div class="created-title">T0助手 已创建<span>待加入顶部</span></div>
+            <p class="builder-copy" style="margin-top:8px;">默认指令：/ 看看今天哪些持仓适合做T0；/ 监控我的高波动持仓；/ 生成一版T0交易方案。</p>
+          </div>
+        `,
+        board: `
+          <div class="builder-hero">
+            <h3>T0助手 · 创建预览</h3>
+            <p class="builder-copy">在盘中监控持仓股波动，发现可做 T0 的价差机会，并给出可确认的操作建议。</p>
+            <div class="builder-steps">
+              <div class="builder-step"><span>1</span><div><b>服务目标</b><br>只盯我的持仓股，识别盘中价差机会。</div></div>
+              <div class="builder-step"><span>2</span><div><b>Skill 选择</b><br>分时异动、持仓成本、T0 价差、交易风险校验。</div></div>
+              <div class="builder-step"><span>3</span><div><b>提示词约束</b><br>不自动下单，低打扰，必须给出理由和失败条件。</div></div>
+              <div class="builder-step"><span>4</span><div><b>发布方式</b><br>确认后加入顶部 Agent 区，成为可复用入口。</div></div>
+            </div>
+          </div>
+          <div class="builder-card">
+            <h3>可调用 skill</h3>
+            <div class="skill-grid">
+              <div class="skill-pill"><span class="skill-dot">1</span>分时异动识别</div>
+              <div class="skill-pill"><span class="skill-dot">2</span>持仓成本分析</div>
+              <div class="skill-pill"><span class="skill-dot">3</span>T0 价差测算</div>
+              <div class="skill-pill"><span class="skill-dot">4</span>交易风险校验</div>
+            </div>
+          </div>
+          <div class="builder-card">
+            <h3>提示词约束</h3>
+            <div class="constraint-list">
+              <div>只分析我的持仓股，不主动推荐陌生股票。</div>
+              <div>只在盘中波动超过阈值时提醒，并采用低打扰频率。</div>
+              <div>所有建议必须说明理由、价差空间和失败条件。</div>
+              <div>不直接下单，只生成可确认的交易方案。</div>
+            </div>
+          </div>
+          <div class="agent-created">
+            <div class="created-title">T0助手 已创建<span>待加入顶部</span></div>
+            <p class="builder-copy" style="margin-top:8px;">默认指令：/ 看看今天哪些持仓适合做T0；/ 监控我的高波动持仓；/ 生成一版T0交易方案。</p>
+          </div>
+        `,
+        chat: `
+          <div class="agent-chat-flow">
+            <div class="assistant-head">
+              <img src="./assets/avatars/yomi.png" alt="Yomi" />
+              <div class="assistant-name">Yomi</div>
+            </div>
+            <div class="assistant-reply">
+              你想创建一个什么类型的 Agent？我可以先从常用金融能力里帮你搭一版。
+              <div class="builder-options"><span>选股</span><span>复盘</span><span>T0</span><span>风控</span><span>公告解读</span><span>持仓诊断</span></div>
+            </div>
+            <div class="agent-confirm">我想做一个 T0 助手，帮我盯盘内波动机会。</div>
+            <div class="assistant-reply">好的，我会把它定义成“盘中 T0 Agent”。默认开启分时异动识别、持仓成本分析、T0 价差测算和交易风险校验；关闭自动下单。</div>
+            <div class="agent-confirm">可以，先不要自动下单，只给建议。</div>
+            <div class="assistant-reply">已记录。它将只分析你的持仓股；低打扰提醒；每次建议都必须给出理由、价差空间和失败条件。</div>
+            <div class="agent-confirm">创建并添加到顶部。</div>
+            <div class="assistant-reply">
+              已创建 <b>T0助手</b>。我会把它放到 AI交易员后面。之后你可以直接点击它，或者说“让 T0助手看一下今天能不能做价差”。
+              <div class="reply-actions"><button>继续调整</button><button class="primary">创建并添加到顶部</button></div>
+            </div>
+          </div>
+        `
+      },
+      event: {
+        title: "事件捕手Eve · 正在捕捉市场事件...",
+        lead: "我已为您抓取到3条可能影响自选股的事件：政策发布、公司公告和舆情热度变化。",
+        prompt: "是否需要我按影响程度整理事件链，并标出可能受益和承压的股票？",
+        action: "生成事件影响链",
+        avatar: "./assets/avatars/event.png",
+        name: "事件Agent",
+        executeTitle: "事件捕手Eve",
+        executeLead: "已生成今日关键事件影响链",
+        executeAnswer: "好的，我会调用事件解析 skill，追踪政策、公告和舆情对相关标的的影响路径。",
+        grid: `
+          <div class="sector hot">政策事件<br><span class="num">低空经济</span></div>
+          <div class="sector">公告事件<br><span class="num">并购重组</span></div>
+          <div class="sector">舆情事件<br><span class="num">AI 服务器</span></div>
+          <div class="sector negative">风险事件<br><span class="num">减持预告</span></div>
+          <div class="sector negative">澄清公告<br><span class="num">2条</span></div>
+          <div class="sector">自选相关<br><span class="num">5只命中</span></div>
+        `,
+        board: `
+          <div class="rank-column">
+            <div class="rank-title">受益链 ↗</div>
+            <div class="rank-main"><span class="rank-badge">1</span><div>低空经济<div class="rank-note">政策催化｜订单预期</div></div></div>
+            <div class="rank-percent"><span>影响强度</span><strong>高</strong></div>
+            <div class="rank-meta"><span>扩散至</span><span>命中</span><strong>无人机</strong><strong>3只</strong><strong>航空材料</strong><strong>2只</strong></div>
+          </div>
+          <div class="rank-column out">
+            <div class="rank-title">承压链 ↘</div>
+            <div class="rank-main"><span class="rank-badge">1</span><div>减持预告<div class="rank-note">短线情绪承压｜量能放大</div></div></div>
+            <div class="rank-percent"><span>风险级别</span><strong>中</strong></div>
+            <div class="rank-meta"><span>涉及</span><span>命中</span><strong>医药</strong><strong>2只</strong><strong>消费</strong><strong>1只</strong></div>
+          </div>
+          <div class="rank-more">查看事件链 ›</div>
+        `
+      }
+    };
+
+    function renderAgent(agent) {
+      clearTimeout(agentCustomTimer);
+      const view = agentViews[agent] || agentViews.account;
+      switchTitle.textContent = view.title;
+      switchLead.textContent = view.lead;
+      switchGrid.innerHTML = agent === "addAgent" ? addAgentBoard(currentAddAgentStep) : (agent === "account" ? accountDemoResult : view.grid);
+      switchPrompt.textContent = view.prompt;
+      runAgent.textContent = view.action;
+      executeTitle.textContent = view.executeTitle;
+      executeLead.textContent = agent === "addAgent" ? addAgentLead(currentAddAgentStep) : view.executeLead;
+      executeBoard.innerHTML = agent === "addAgent" ? addAgentBoard(currentAddAgentStep) : (agent === "account" ? accountDemoResult : view.board);
+      agentScroll.innerHTML = agent === "addAgent" ? addAgentChat(currentAddAgentStep) : (view.chat || `
+        <div class="dialog-placeholder">
+          <strong>对话区</strong>
+          当前还没有发起对话。你可以从底部推荐指令开始。
+        </div>
+      `);
+      if (agent === "traderCustom") {
+        agentScroll.innerHTML = agentCustomThinking;
+        agentCustomTimer = setTimeout(() => {
+          agentScroll.innerHTML = agentCustomReply;
+          const generateButton = document.getElementById("generateRealPlan");
+          if (generateButton) {
+            generateButton.addEventListener("click", () => {
+              executeLead.textContent = "已生成黄金 ETF 盈利保护计划。";
+              executeBoard.innerHTML = goldProtectionPlan;
+            });
+          }
+        }, 2000);
+      }
+      dockCommand.querySelector("span:first-child").textContent = view.command || "/ 开始快速交易";
+    }
+
+    function scrollAgentChatToBottom() {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        executeView.scrollTo({ top: executeView.scrollHeight, behavior: "smooth" });
+      }));
+    }
+
+    function setState(state, navState = state) {
+      phone.dataset.state = state;
+      phone.dataset.nav = navState;
+      phone.classList.remove("force-expanded");
+      if (state !== "home") phone.classList.remove("workbench-collapsed");
+      buttons.forEach((button) => button.classList.toggle("active", button.dataset.stateButton === navState));
+      const activeAgent = stateAgent[navState] || currentAgent;
+      agents.forEach((agent) => agent.classList.toggle("active", agent.dataset.agent === activeAgent));
+      if (state === "switch" || state === "agent") renderAgent(currentAgent);
+      updateNotes(navState);
+    }
+
+    function selectAgent(agent) {
+      if (agent === "event") return;
+      if (agent === "yomi") {
+        setState("home");
+        return;
+      }
+      if (agent === "addAgent") {
+        currentAgent = "addAgent";
+        currentAddAgentStep = 1;
+        setState("agent", "addAgent");
+        executeView.scrollTop = 0;
+        return;
+      }
+      if (agent === "t0") {
+        currentAgent = "t0";
+        setState("agent", "t0");
+        return;
+      }
+      currentAgent = agent;
+      setState("agent", agent === "trader" ? "trader" : (agent === "t0" ? "t0" : "account"));
+    }
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const target = button.dataset.stateButton;
+        if (target === "account") {
+          currentAgent = "account";
+          setState("agent", "account");
+          return;
+        }
+        if (target === "trader") {
+          currentAgent = "trader";
+          setState("agent", "trader");
+          return;
+        }
+        if (target === "agentCustom") {
+          currentAgent = "traderCustom";
+          setState("agent", "agentCustom");
+          return;
+        }
+        if (target === "addAgent") {
+          currentAgent = "addAgent";
+          currentAddAgentStep = 1;
+          setState("agent", "addAgent");
+          executeView.scrollTop = 0;
+          return;
+        }
+        if (target === "home") {
+          phone.classList.remove("workbench-signals-state");
+          phone.classList.remove("workbench-collapsed");
+        }
+        setState(target);
+      });
+    });
+
+    agents.forEach((agent) => {
+      agent.addEventListener("click", () => selectAgent(agent.dataset.agent));
+    });
+
+    overlay.addEventListener("click", () => {
+      if (phone.dataset.state === "home" && phone.classList.contains("workbench-collapsed")) {
+        phone.classList.remove("workbench-collapsed");
+        return;
+      }
+      if (phone.dataset.state === "chat" || phone.dataset.state === "custom" || phone.dataset.state === "agent") {
+        phone.classList.toggle("force-expanded");
+        return;
+      }
+    });
+
+    overlayCollapse.addEventListener("click", (event) => {
+      event.stopPropagation();
+      overlay.scrollTop = 0;
+      setState("chat");
+    });
+
+    runAgent.addEventListener("click", () => {
+      currentAgent = "trader";
+      setState("agent", "trader");
+    });
+    dockCommand.addEventListener("click", () => {
+      if (currentAgent === "trader" || currentAgent === "traderCustom") {
+        currentAgent = "traderCustom";
+        setState("agent", "agentCustom");
+      }
+    });
+    agentScroll.addEventListener("click", (event) => {
+      const nextButton = event.target.closest("[data-add-step]");
+      if (!nextButton) return;
+      currentAddAgentStep = Number(nextButton.dataset.addStep);
+      if (currentAddAgentStep >= 4) phone.classList.add("t0-created");
+      renderAgent("addAgent");
+      scrollAgentChatToBottom();
+    });
+    syncSignals.addEventListener("click", () => {
+      phone.classList.add("workbench-signals-state");
+      setState("home");
+    });
+    renderAgent(currentAgent);
+    updateNotes("home");
+
+    document.getElementById("modeToggle").addEventListener("click", () => {
+      document.body.classList.toggle("dark");
+      document.getElementById("modeToggle").textContent =
+        document.body.classList.contains("dark") ? "切换亮色模式" : "切换暗色模式";
+    });
+  </script>
+</body>
+</html>
