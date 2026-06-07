@@ -502,19 +502,14 @@
       top: 24px;
     }
 
-    .overlay-collapse .tap-hand {
-      right: -18px;
-      top: 20px;
-    }
-
     .save-default .tap-hand {
       right: 14px;
       top: -25px;
     }
 
     .trade-toggle .tap-hand {
-      right: -40px;
-      top: -23px;
+      right: -10px;
+      top: 13px;
     }
 
     .custom-guide .tap-hand {
@@ -535,7 +530,6 @@
     }
 
     .kyc-primary::after,
-    .overlay-collapse::after,
     .save-default::after,
     .trade-toggle::after,
     .custom-guide-actions button:last-child::after {
@@ -658,7 +652,9 @@
     }
 
     .agent-bar {
-      height: 130px;
+      position: relative;
+      z-index: 7;
+      height: 146px;
       padding: 0 10px;
       display: flex;
       gap: 8px;
@@ -676,7 +672,7 @@
     .agent {
       position: relative;
       flex: 0 0 82px;
-      height: 124px;
+      height: 140px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -755,13 +751,12 @@
     }
 
     .agent-work-bubble {
-      position: absolute;
+      position: relative;
       z-index: 5;
-      left: 50%;
-      bottom: -24px;
       width: 88px;
       min-height: 32px;
-      transform: translateX(-50%);
+      flex: 0 0 auto;
+      margin-top: 4px;
       border-radius: 14px;
       padding: 6px 8px;
       display: none;
@@ -1021,7 +1016,7 @@
     }
 
     .phone.kyc-complete[data-state="home"]:not(.guide-dismissed) .work-area {
-      top: 270px;
+      top: 290px;
     }
 
     .custom-guide {
@@ -1237,6 +1232,10 @@
 
     .phone.force-expanded .overlay-handle {
       display: none;
+    }
+
+    .phone.force-expanded .overlay-collapse {
+      display: grid;
     }
 
     .chat-panel,
@@ -3861,8 +3860,15 @@
     }
 
     .acct-greet .tmeta::after {
-      content: " ⌄";
-      color: #b9bfcf;
+      content: "";
+      display: inline-block;
+      width: 5px;
+      height: 5px;
+      margin-left: 4px;
+      vertical-align: middle;
+      border-right: 1.5px solid #b9bfcf;
+      border-bottom: 1.5px solid #b9bfcf;
+      transform: translateY(-2px) rotate(45deg);
     }
 
     .acct-greet .gsay {
@@ -6239,8 +6245,8 @@
     }
 
     .trade-header {
-      height: 118px;
-      padding: 24px 22px 0;
+      /* height: 118px; */
+      padding: 24px 22px 20px;
       display: grid;
       grid-template-columns: 1fr auto auto;
       gap: 12px;
@@ -6252,8 +6258,9 @@
       align-items: center;
       gap: 12px;
       color: #111;
-      font-size: 25px;
+      font-size: 15px;
       font-weight: 800;
+      white-space: nowrap;
     }
 
     body.dark .trade-title {
@@ -6261,10 +6268,11 @@
     }
 
     .hamburger {
-      width: 32px;
+      width: 26px;
       height: 22px;
       display: grid;
       gap: 6px;
+      flex-shrink: 0;
     }
 
     .hamburger span {
@@ -6277,7 +6285,7 @@
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      margin-left: 46px;
+      margin-left: 8px;
       color: var(--muted);
       font-size: 13px;
       font-weight: 500;
@@ -6289,7 +6297,9 @@
       height: 16px;
       border-radius: 8px;
       background: rgba(23, 36, 78, 0.12);
-      box-shadow: inset 2px 2px 0 #fff;
+      border: 2px solid transparent;
+      box-shadow: inset 12px 0 0 0 #fff;
+      box-sizing: border-box;
     }
 
     .account-id {
@@ -6304,15 +6314,15 @@
     }
 
     .trade-pill {
-      height: 42px;
-      min-width: 78px;
-      border-radius: 21px;
+      height: 32px;
+      min-width: 60px;
+      border-radius: 16px;
       display: grid;
       place-items: center;
       color: #5b6578;
       border: 1px solid rgba(255, 255, 255, 0.72);
       background: rgba(255, 255, 255, 0.28);
-      font-size: 17px;
+      font-size: 13px;
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.26);
     }
 
@@ -6338,7 +6348,7 @@
 
     .order-label {
       color: #111;
-      font-size: 18px;
+      font-size: 14px;
       font-weight: 650;
       line-height: 1.4;
     }
@@ -6354,12 +6364,12 @@
       border-radius: 3px;
       color: #4f5a6b;
       border: 1px solid rgba(79, 90, 107, 0.28);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 500;
     }
 
     .order-field {
-      min-height: 44px;
+      min-height: 37px;
       border-radius: 8px;
       padding: 0 16px;
       display: flex;
@@ -6368,7 +6378,7 @@
       gap: 10px;
       background: #e5eefc;
       color: #0a0d14;
-      font-size: 19px;
+      font-size: 15px;
       font-weight: 700;
     }
 
@@ -6380,7 +6390,7 @@
     .order-field.muted {
       justify-content: space-between;
       color: #9aa5b8;
-      font-size: 22px;
+      font-size: 15px;
       font-weight: 400;
     }
 
@@ -6403,7 +6413,7 @@
 
     .amount-value {
       color: #111;
-      font-size: 17px;
+      font-size: 15px;
       font-weight: 700;
     }
 
@@ -6428,10 +6438,10 @@
 
     .buy-btn,
     .sell-btn {
-      height: 52px;
-      border-radius: 26px;
+      height: 48px;
+      border-radius: 24px;
       color: #fff;
-      font-size: 20px;
+      font-size: 15px;
       font-weight: 800;
       box-shadow: none;
     }
@@ -6484,7 +6494,7 @@
     .position-head,
     .position-row {
       display: grid;
-      grid-template-columns: 1.55fr 1fr 0.85fr 0.7fr;
+      grid-template-columns: 1.4fr 1.05fr 0.85fr 0.9fr;
       gap: 8px;
       align-items: center;
     }
@@ -6494,6 +6504,35 @@
       font-size: 13px;
       padding-bottom: 8px;
       border-bottom: 1px solid rgba(109, 119, 139, 0.12);
+    }
+
+    .sort-arrows {
+      display: inline-block;
+      width: 8px;
+      height: 12px;
+      margin-left: 2px;
+      vertical-align: middle;
+      position: relative;
+    }
+
+    .sort-arrows::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      border-left: 3px solid transparent;
+      border-right: 3px solid transparent;
+      border-bottom: 4px solid #8b95a8;
+    }
+
+    .sort-arrows::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      border-left: 3px solid transparent;
+      border-right: 3px solid transparent;
+      border-top: 4px solid #8b95a8;
     }
 
     .position-row {
@@ -6526,8 +6565,6 @@
     }
 
     .batch-actions {
-      position: sticky;
-      bottom: 12px;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 16px;
@@ -6539,7 +6576,7 @@
       border-radius: 24px;
       background: #eef4ff;
       color: #3d4654;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
       box-shadow: none;
     }
@@ -6573,6 +6610,17 @@
         max-width: 100%;
         margin-top: 12px;
       }
+    }
+
+    .chevron-down {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      margin-left: 2px;
+      vertical-align: middle;
+      border-right: 1.5px solid currentColor;
+      border-bottom: 1.5px solid currentColor;
+      transform: translateY(-2px) rotate(45deg);
     }
   </style>
 </head>
@@ -6720,7 +6768,7 @@
             <img class="workbench-svg workbench-signals" src="./assets/components/workbench-signals.svg"
               alt="定制后的 Yomi 默认页" />
           </section>
-          <button class="overlay-collapse" id="overlayCollapse" type="button">收起⌃<span class="tap-hand"></span></button>
+          <button class="overlay-collapse" id="overlayCollapse" type="button">收起⌃</button>
 
           <section class="chat-panel">
             <div class="bubble-question">宁德时代主力资金流入是否持续增强</div>
@@ -6730,7 +6778,7 @@
             </div>
             <div class="tag-row">
               <span class="think-tag">深度思考</span>
-              <span>模型完成答案生成⌄</span>
+              <span>模型完成答案生成<i class='chevron-down'></i></span>
             </div>
             <div class="answer">
               从当前看板信号看，宁德时代的主力资金流入有增强迹象，但还不能直接判断为“持续增强”。
@@ -6752,7 +6800,7 @@
               </div>
               <div class="tag-row">
                 <span class="think-tag">工作台定制</span>
-                <span>同步盯盘信号⌄</span>
+                <span>同步盯盘信号<i class='chevron-down'></i></span>
               </div>
               <div class="dialog-step">我已整理出你盯盘中的全部信号，并可以同步到首页自选上方，作为固定模块展示。是否固定到首页？</div>
               <div class="custom-result">
@@ -6860,52 +6908,61 @@
             <div>
               <div class="trade-title"><span class="hamburger"><span></span><span></span><span></span></span>交易 <span
                   class="simulate">模拟</span></div>
-              <div class="account-id">普通 21**327⌄</div>
+              <div class="account-id">普通 21**327<i class="chevron-down"></i></div>
             </div>
             <div class="trade-pill">委托</div>
             <div class="trade-pill">条件单</div>
           </div>
           <div class="order-card">
             <div class="order-row">
-              <div class="order-label">代码<br><small>行情图⌄</small></div>
+              <div class="order-label">代码<br><small>行情图<i class='chevron-down'></i></small></div>
               <div>
-                <div class="order-field">贵州茅台 601519 <span style="color:#9aa5b8">×</span></div>
+                <div class="order-field">贵州茅台 601519 <span
+                    style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#c3cad7;color:#fff;font-size:12px;line-height:1;">×</span>
+                </div>
                 <div class="quote-line"><span class="up">1576.00</span><span class="up">+0.50</span><span
                     class="down">-0.03%</span></div>
               </div>
             </div>
             <div class="order-row">
               <div class="order-label">类型</div>
-              <div class="order-field">限价委托 <span style="color:#9aa5b8">⌄</span></div>
+              <div class="order-field">限价委托 <span style="color:#9aa5b8"><i class='chevron-down'></i></span></div>
             </div>
             <div class="order-row">
               <div class="order-label">价格</div>
               <div>
                 <div class="order-field muted"><span>−</span><b
-                    style="color:var(--ink);font-size:22px;">1554.97</b><span>＋</span></div>
-                <div class="quote-line"><span class="down">1552.21</span><span>买上限/卖下限？</span><span
-                    class="up">1564.00</span></div>
+                    style="color:var(--ink);font-size:15px;">1554.97</b><span>＋</span></div>
+                <div class="quote-line"><span class="down">1552.21</span><span
+                    style="display:inline-flex;align-items:center;gap:2px;">买上限/卖下限 <svg width="12" height="12"
+                      viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        d="M8 1.5C4.41015 1.5 1.5 4.41015 1.5 8C1.5 11.5899 4.41015 14.5 8 14.5C11.5899 14.5 14.5 11.5899 14.5 8C14.5 4.41015 11.5899 1.5 8 1.5ZM8 10.75C7.58579 10.75 7.25 11.0858 7.25 11.5C7.25 11.9142 7.58579 12.25 8 12.25C8.41421 12.25 8.75 11.9142 8.75 11.5C8.75 11.0858 8.41421 10.75 8 10.75ZM6.5 6.25C6.5 5.42157 7.17157 4.75 8 4.75C8.82843 4.75 9.5 5.42157 9.5 6.25C9.5 6.94582 9.04357 7.53488 8.40119 7.70617L8.38072 7.71162C8.04306 7.80164 7.75 8.09341 7.75 8.5C7.75 8.91421 8.08579 9.25 8.5 9.25C9.43123 9.25 10.1585 8.59012 10.5186 7.84666C10.8258 7.21235 11 6.55167 11 6.25C11 4.59315 9.65685 3.25 8 3.25C6.34315 3.25 5 4.59315 5 6.25C5 6.66421 5.33579 7 5.75 7C6.16421 7 6.5 6.66421 6.5 6.25Z"
+                        fill="#9aa5b8" />
+                    </svg></span><span class="up">1564.00</span></div>
               </div>
             </div>
             <div class="order-row">
-              <div class="order-label">数量<br><small>仓位⌄</small></div>
+              <div class="order-label">数量<br><small>仓位<i class='chevron-down'></i></small></div>
               <div>
                 <div class="order-field muted"><span>−</span><b
-                    style="color:var(--ink);font-size:22px;">1000</b><span>＋</span></div>
+                    style="color:var(--ink);font-size:15px;">1000</b><span>＋</span></div>
                 <div class="quote-line" style="grid-template-columns:1fr;"><span>可买8394股 可卖9203股</span></div>
               </div>
             </div>
             <div class="amount-row">
               <div class="order-label">金额</div>
               <div class="amount-value">1,554.970元</div>
-              <div class="more-setting">更多设置⌄</div>
+              <div class="more-setting">更多设置<i class='chevron-down'></i></div>
             </div>
             <div class="order-actions"><button class="buy-btn">买入</button><button class="sell-btn">卖出</button></div>
           </div>
           <div class="position-card">
             <div class="position-tabs"><span>持仓 8</span><span>合约 23</span><span>委托 8</span><span>条件单
                 7</span><span>历史</span></div>
-            <div class="position-head"><span>名称/代码</span><span>持仓盈亏</span><span>持仓/可用</span><span>现价</span></div>
+            <div class="position-head"><span>名称/代码</span><span>持仓盈亏<span
+                  class="sort-arrows"></span></span><span>持仓/可用<span class="sort-arrows"></span></span><span>现价/成本<span
+                  class="sort-arrows"></span></span></div>
             <div class="position-row">
               <div>汇绿生态<small>601495 <span class="pos-tags"><span>信用</span><span>条件单</span></span></small></div>
               <div class="up">+1551.00<small class="up">+14.92%</small></div>
@@ -7325,7 +7382,7 @@
               <img src="./assets/avatars/morning.png" alt="早点听" />
               <div class="assistant-name">早点听</div>
             </div>
-            <div class="morning-chat-meta"><span>深度思考</span><span>已读取持仓与近期关注⌄</span></div>
+            <div class="morning-chat-meta"><span>深度思考</span><span>已读取持仓与近期关注<i class='chevron-down'></i></span></div>
             <div class="assistant-reply">
               <p>早上好，我为您整理好了今天盘前需关注的隔夜要点与热门板块机会。</p>
               <p>我看您最近持仓了<strong>宁德时代、恩捷股份</strong>，还持续关注<strong>美股英伟达</strong>的相关资讯，也经常问我美国非农数据公布前后的各方观点和市场预期。</p>
@@ -7354,7 +7411,7 @@
           <div class="morning-report-shell" id="morningReportShell">
           <div class="morning-collapsed-handle" id="morningExpand">
             <span><strong>早点听报告已收起</strong><br>保留刚才的定制内容</span>
-            <span>展开⌄</span>
+            <span>展开<i class='chevron-down'></i></span>
           </div>
           <div class="morning-board">
             <div class="morning-hero">
@@ -7966,7 +8023,7 @@
             <img src="./assets/avatars/morning.png" alt="早点听" />
             <div class="assistant-name">早点听</div>
           </div>
-          <div class="morning-chat-meta"><span>任务完成</span><span>专属早报已生成⌄</span></div>
+          <div class="morning-chat-meta"><span>任务完成</span><span>专属早报已生成<i class='chevron-down'></i></span></div>
           <div class="assistant-reply">好的，都整理好了。我把最影响你持仓和关注方向的内容放在前面，也补充了对应的传导分析和观察建议。</div>
           <div class="morning-result-card" id="morningResultCard">
             <div class="morning-result-icon">早</div>
@@ -8005,7 +8062,7 @@
             <img src="./assets/avatars/morning.png" alt="早点听" />
             <div class="assistant-name">早点听</div>
           </div>
-          <div class="morning-chat-meta"><span>深度思考</span><span>正在调用早点听能力⌄</span></div>
+          <div class="morning-chat-meta"><span>深度思考</span><span>正在调用早点听能力<i class='chevron-down'></i></span></div>
           <div class="assistant-reply">收到。我正在结合你的持仓、近期浏览和刚补充的内容，重新筛选今天真正相关的信息...</div>
         </div>
       `;
@@ -8210,6 +8267,10 @@
     overlayCollapse.addEventListener("click", (event) => {
       event.stopPropagation();
       overlay.scrollTop = 0;
+      if (phone.classList.contains("force-expanded")) {
+        phone.classList.remove("force-expanded");
+        return;
+      }
       setState("chat");
     });
 
