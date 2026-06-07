@@ -1,0 +1,9 @@
+{
+  "version": "2.0",
+  "cacheVersion": "2.0",
+  "name": "Yomi AI 涨乐关键状态原型",
+  "entry": "index.html",
+  "changelog": "CHANGELOG.md",
+  "updatedAt": "2026-06-07",
+  "notes": "记录当前可演示版本；后续分支合并请同步更新 version、cacheVersion 和 CHANGELOG。"
+}
